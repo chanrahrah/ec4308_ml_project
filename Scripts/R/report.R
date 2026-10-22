@@ -1,0 +1,56 @@
+write_validation_report <- function() {
+  primary <- fread(file.path(AUDIT,"stationarity_primary.csv"))
+  p <- primary[h==3 & kind=="transformed"]
+  stats <- c("| Predictor | ADF statistic | ADF 5% cutoff | KPSS statistic | KPSS 5% cutoff | Primary result |",
+             "|---|---:|---:|---:|---:|---|")
+  for(i in seq_len(nrow(p))) stats <- c(stats,sprintf("| `%s` | %.4f | %.2f | %.4f | %.3f | %s |",
+    p$predictor[i],p$adf_stat[i],p$adf_cv_5pct[i],p$kpss_stat[i],p$kpss_cv_5pct[i],p$verdict[i]))
+  tests <- jsonlite::read_json(file.path(AUDIT,"R_tests.json"),simplifyVector=TRUE)
+  stock <- jsonlite::read_json(file.path(AUDIT,"stock_audit.json"),simplifyVector=TRUE)
+  yield_impact <- fread(file.path(AUDIT,"yield_target_correction.csv"))
+  lagged <- fread(file.path(AUDIT,"stationarity_lagged_primary.csv"))
+  mixed <- lagged[verdict!="stationarity supported"]
+  split <- fread(file.path(AUDIT,"model_split_counts.csv"))
+  split_lines <- c("| Horizon | Train | Validation | Test | Boundary-purged | Unlabeled |",
+                   "|---:|---:|---:|---:|---:|---:|")
+  for(horizon in c(1,3,6)) {
+    d <- split[h==horizon]; count <- function(label) {v<-d$n[d$split==label]; if(length(v)) v else 0}
+    split_lines <- c(split_lines,sprintf("| %d | %d | %d | %d | %d | %d |",horizon,count("train"),count("validation"),count("test"),count("purged_boundary"),count("unlabeled")))
+  }
+  text <- c("# R baseline validation and modeling handoff", "",
+    "The active workflow builds all variables, transformations, stationarity diagnostics, forward targets and modeling inputs in R directly from unchanged raw CSVs. It contains 22 base predictors, including UNRATE and BAA10YM, and 132 features using lags 0-5. No predictive model or final-test performance has been fitted.","",
+    "**All 22 transformed base predictors have supportive primary training ADF/KPSS results at each horizon.** This supports beginning model development; it does not prove permanent stationarity, erase source-data ambiguity, or certify a literal historical real-time backtest.","",
+    "## What is ready", "",
+    "- `Data/processed/features_h{1,3,6}_132.csv`: 621 complete monthly rows, April 1974-December 2025.",
+    "- `Data/processed/model_ready_h{1,3,6}.rds`: X, y, split row indices, mature lagged target and separate return metadata.",
+    "- Raw and transformed base series are retained under `Data/processed/`.",
+    sprintf("- %d R test groups pass; these cover source units, complete calendars, windows, causality, missingness, publication delays, stationarity calculations, target alignment and split boundaries.",tests$passed),
+    "- Every saved lag cell is checked against its base series: 245,916 cells across the three 621 x 132 feature files. All nine transformations and all completed labels receive independent numerical checks in R.",
+    "- Source SHA-256 hashes are checked before/after the build; code hashes, package versions and R session information are saved.","",
+    "## R stationarity methodology", "",
+    "Diagnostics use only April 1974-December 2004 (369 monthly observations). ADF uses an intercept, AIC among 0-12 difference lags on a common selection sample, then refits at the chosen lag. KPSS tests level stationarity with the automatic Bartlett bandwidth used by the previous audit. Both tests are executed with `urca` in R after calendar/missingness validation.","",
+    "R's `urca` reports statistics and tabulated critical values, not the Python implementation's approximate p-values. ADF support requires statistic below its 5% critical value; KPSS requires statistic no greater than its 5% critical value. These are different null hypotheses. A non-rejection is not proof.","",
+    "[urca ADF documentation](https://search.r-project.org/CRAN/refmans/urca/help/ur.df.html) and [KPSS documentation](https://search.r-project.org/CRAN/refmans/urca/html/ur.kpss.html). The explicit ADF selector includes lag zero; native automatic selection has different conventions, so defaults are not silently equated across languages.","",
+    "The audit contains 132 primary rows (raw/transformed x 22 x three horizons) and 1,056 sensitivity rows. Sensitivities cover AIC caps 24/36, BIC cap 24, KPSS bandwidths 12/24/36, and a separate trend specification. Primary h=3 results:","",stats,"",
+    "Monthly changes are used for log D/P, available annual inflation, term spread, short slope and tail imbalance; dispersion uses the monthly change in its log. Bill yield, UNRATE and BAA10YM use deviations from their prior-36 means. These fixed transformations are applied before generic lags, without tuning to test performance.","",
+    "The first R migration retained the previous dispersion-relative-36 and tail-imbalance levels. Additional lag-column diagnostics found inconclusive dispersion lags 2/4/5 and conflicting tail lags 3/4 at each horizon. The same one-month-change rule was then applied to these two concepts (in logs for positive dispersion), and all columns retested. This additional training-only specification decision changes economic interpretation and is disclosed; it is not described as preregistered or selected for better model performance. The 72 before/after results are retained in `Data/validation/stationarity_additional_transform_review.csv`.","",
+    "## Statistical qualifications", "",
+    "Several ADF residual Ljung-Box checks flag dependence, particularly inflation/tail changes, overlapping momentum and bill features. This weakens calibration of their nominal unit-root decisions. The distinct trend specification can produce mixed results for unchanged predictors. All settings are retained rather than selecting only favorable results.","",
+    sprintf("The 132 lagged columns were also checked separately over the training dates at each horizon: %d of %d primary pairs are supportive.",nrow(lagged)-nrow(mixed),nrow(lagged)),
+    if(nrow(mixed)) paste0("The remaining finite-sample pairs are listed in `stationarity_lagged_primary.csv`: ",paste(unique(paste0("h",mixed$h," ",mixed$feature," (",mixed$verdict,")")),collapse="; "),". Lagging a stationary process preserves stationarity theoretically, but shifting the finite estimation window can change a borderline test decision. These observations are disclosed, not repeatedly transformed to force a desired p-value.") else "Every lagged column has a supportive primary pair in this sample; sensitivity and residual qualifications still apply.","",
+    "## CRSP field and source review", "",
+    "[VARIABLES.md](VARIABLES.md) maps every predictor to the actual exported fields, units, timing and formulas, with CRSP/FRED/BLS references. Unchanged R definitions reproduce the previous arithmetic; the inherited Treasury-yield error is explicitly corrected below. D/P is a distribution-flow proxy, bill accrual is a safe-return proxy, and turnover's constant volume-unit factor cancels in the detrended ratio. These qualifications are part of the definitions.","",
+    "**Treasury convention corrected:** [CRSP's Treasury guide](https://www.crsp.org/crsp_pdf/crsp-us-treasury-database-guide-sas-ascii-excel-r/), page 13, defines `TMPCYLD = 2 * (exp(182.5 * TMYLD) - 1)`. Thus TMYLD is a continuously compounded daily yield. R uses `exp(TMYLD * days)-1` for bill accrual and `exp(365*TMYLD)-1` for effective annual yields. The inherited discrete-compounding formula was incorrect. Market excess return now also uses actual quote-date gaps rather than calendar-month lengths. Five yield-based predictors and the bill side of each target were rebuilt, independently checked and retested.",
+    sprintf("Across %d completed horizon labels, %d classifications change from this yield correction; the largest bill-return correction is %.8f in decimal returns. Full feature and target differences are in `Data/validation/yield_feature_correction.csv` and `yield_target_correction.csv`. Legacy parity excludes the five corrected definitions rather than treating the old result as ground truth.",sum(yield_impact$completed_labels),sum(yield_impact$changed_labels),max(yield_impact$maximum_bill_return_correction)),"",
+    sprintf("R rechecked %s stock rows: %s duplicate security-month keys, zero numeric conflicts and %s classification conflicts. The deterministic eligible-first policy retains %s unique rows and recovers %s immediate terminal months.",format(stock$raw_rows,big.mark=","),format(stock$duplicate_keys,big.mark=","),format(stock$classification_conflict_keys,big.mark=","),format(stock$unique_rows,big.mark=","),format(stock$terminal_recovered,big.mark=",")),
+    sprintf("There are %d raw capitalization/price/shares identity mismatches above 1%% (%d unique keys); %d enter turnover from 1973 onward. Source fields are not overwritten. Price/return/volume quality flags and effective-dated classification/share joins are missing from the export, so a full source-quality certification remains unavailable.",stock$raw_cap_identity_mismatches,stock$unique_cap_identity_mismatches,stock$cap_mismatches_in_turnover_1973_on),"",
+    "UNRATE's September 2025 release is delayed until November; October is missing. Macro availability and carry-forward age are saved. Current-vintage observations and an assumed next-month publication rule outside the documented exception do not establish historical vintage availability.","",
+    "## Targets and split readiness", "",
+    "y=1 when compounded equity return over t+1 through t+h exceeds `exp(TMYLD(t) * days)-1`, using the origin matched bill yield and actual quote-date days. The bill value is a proxy because 4/13/26 weeks do not exactly equal calendar 1/3/6-month holding periods. Ties are 0. Labels crossing split boundaries are excluded from fitting rows; the final h rows remain unlabeled. Split row indices are supplied inside each RDS:","",split_lines,"",
+    "Use only `$X` as the common predictor matrix. `$metadata` contains future returns and must never be included as predictors. `$mature_target_lag` uses the outcome with origin t-h, available by t, for later dynamic-probit design.","",
+    "## Reproducibility and next stage", "",
+    "Run `Rscript --vanilla Scripts/run_all.R`. For a new installation run `Rscript --vanilla Scripts/00_setup.R` first. The active build does not call Python or consume historical Python-generated predictors. `check_migration.R` is an optional one-time comparison against archived reference outputs; it is not required by `run_all.R`.","",
+    "The migration comparison, source audit, unit tests and stationarity results are in `Data/validation/`. If present, `migration_manifest.json` summarizes cross-language agreement; `cleanup_manifest.json` records the verified recovery archive for retired code and outputs. The raw data and original proposal remain in place.","",
+    "Next: implement model fitting, training-fold preprocessing and tuning, validation thresholds and a fixed nonoverlapping portfolio schedule. Keep final-test outcomes out of design choices. Transformations selected using the full 1974-2004 training era must not be presented as ex-ante choices for earlier pseudo-live folds. Earlier retrospective full-sample stationarity exposure is documented in the recovery archive; the present decisions use the training period only.")
+  writeLines(text,file.path(ROOT,"Scripts/VALIDATION.md"))
+}
