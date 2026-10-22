@@ -1,9 +1,0 @@
-placeholder to commit data folder. 
-ensure the "Data" zip file from telegram is extracted into the same level as the Data folder (Not this text file)
-eg of file structure:
-Data (folder)
--cpi_u_data (folder)
---CPIAUCNS.csv (csv)
--crsp_daily_index_data (folder)
---crsp_daily_index_data.csv (csv)
-- etc
