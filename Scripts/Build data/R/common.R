@@ -4,7 +4,7 @@ find_root <- function() {
   override <- Sys.getenv("EC4308_ROOT", "")
   if (nzchar(override)) return(normalizePath(override, mustWork=TRUE))
   arg <- grep("^--file=", commandArgs(FALSE), value=TRUE)
-  file <- if(length(arg)) sub("^--file=", "", arg[1]) else ""
+  file <- if(length(arg)) gsub("~+~", " ", sub("^--file=", "", arg[1]), fixed=TRUE) else ""
   candidates <- c(if(nzchar(file) && file.exists(file)) dirname(normalizePath(file)), getwd())
   for (candidate in candidates) {
     for (i in 1:5) {
