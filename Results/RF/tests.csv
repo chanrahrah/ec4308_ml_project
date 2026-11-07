@@ -1,0 +1,20 @@
+"test","passed"
+"Shared evaluator: professor's 12-month six-cohort example",TRUE
+"Shared evaluator: exact post-cost target weights",TRUE
+"Class ordering: probability is P(Y = 1)",TRUE
+"Hyperparameter grid matches the tuning switch",TRUE
+"Brier tie rule favours the simpler candidate",TRUE
+"RF cutoff grid 0.30-0.90 by 0.05 contains the 0.50 comparator",TRUE
+"Cutoff tie rule and undefined Sharpe exclusion (shared)",TRUE
+"Exactly the 132 frozen predictors and no metadata h 1",TRUE
+"Boundary maturity and future-perturbation invariance h 1",TRUE
+"Seeded determinism and identity permutation h 1",TRUE
+"Passive identities on the RF forecast calendar h 1",TRUE
+"Exactly the 132 frozen predictors and no metadata h 3",TRUE
+"Boundary maturity and future-perturbation invariance h 3",TRUE
+"Seeded determinism and identity permutation h 3",TRUE
+"Passive identities on the RF forecast calendar h 3",TRUE
+"Exactly the 132 frozen predictors and no metadata h 6",TRUE
+"Boundary maturity and future-perturbation invariance h 6",TRUE
+"Seeded determinism and identity permutation h 6",TRUE
+"Passive identities on the RF forecast calendar h 6",TRUE

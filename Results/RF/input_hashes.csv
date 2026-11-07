@@ -1,0 +1,6 @@
+"file","sha256"
+"Data/processed/model_ready_h1.rds","9952776779b70d015ebec9023899f5ae779b584d434df63e73be0ee8b2402cf7"
+"Data/processed/model_ready_h3.rds","526b1fe591168053da09c3d755a3ed20ef5b229ee320a7ac03a0277afc450b9e"
+"Data/processed/model_ready_h6.rds","38124482e5ffc430661dc1badaa6dd532f2060f02bcc655369e734c5cce1ae52"
+"Data/crsp_monthly_index_data/crsp_monthly_index_data.csv","8bae185a75ea7712da6222d47df60540ecc8bd09f18ecec095c43b5f9b984471"
+"Data/crsp_treasury_risk_free_series_data/crsp_treasury_risk_free_series_data.csv","25a5ff5ca50ff24345709eb5bea334ae5b982201c7eacf8ea03f6b152cfc94ee"
