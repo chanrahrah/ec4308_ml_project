@@ -1,0 +1,4 @@
+"h","model","alpha","lambda_ratio","validation_Brier","n_validation","mean_nonzero","cutoff","validation_sharpe_matched_ladder","validation_sharpe_common_rf","fixed_050_validation_sharpe_matched_ladder","selection_cost"
+1,"elastic_net",1,1,0.240647632281414,95,0,0.5,0.29062557446729,0.29062557446729,0.29062557446729,0.001
+3,"elastic_net",1,1,0.234798442250509,93,0,0.5,0.287042101394736,0.292692639711222,0.287042101394736,0.001
+6,"elastic_net",1,1,0.221580464523245,90,0,0.5,0.269180289187012,0.285108306586892,0.269180289187012,0.001
