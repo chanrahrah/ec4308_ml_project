@@ -2,7 +2,7 @@
 "Shared evaluator: professor's 12-month six-cohort example",TRUE
 "Shared evaluator: exact post-cost target weights",TRUE
 "Class ordering: probability is P(Y = 1)",TRUE
-"Hyperparameter grid matches the tuning switch",TRUE
+"Declared 18-candidate hyperparameter grid",TRUE
 "Brier tie rule favours the simpler candidate",TRUE
 "RF cutoff grid 0.30-0.90 by 0.05 contains the 0.50 comparator",TRUE
 "Cutoff tie rule and undefined Sharpe exclusion (shared)",TRUE

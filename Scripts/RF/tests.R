@@ -28,22 +28,19 @@ run_rf_tests <- function(root, cfg) {
     p <- rf_prob(fit, rbind(c(a = 3, b = 0), c(a = -3, b = 0)))
     ensure(p[1] > .9 && p[2] < .1, "Probability column is not the Y = 1 class")
   })
-  check("Hyperparameter grid matches the tuning switch", {
+  check("Declared 18-candidate hyperparameter grid", {
     g <- cfg$hyper_grid
-    if (isTRUE(cfg$tune_hyperparameters)) {
-      ensure(nrow(g) == 18L && !anyDuplicated(g$config_id) && sum(g$is_ranger_default) == 1L, "Unexpected grid")
-      ensure(identical(sort(unique(g$mtry)), c(4L, 11L, 33L)) && identical(sort(unique(g$min_node_size)), c(10L, 30L, 60L)),
-             "Unexpected grid values")
-    } else {
-      ensure(nrow(g) == 1L && g$is_ranger_default && cfg$num_trees == 500L, "Defaults mode must have one default candidate, 500 trees")
-    }
+    ensure(nrow(g) == 18L && !anyDuplicated(g$config_id) && sum(g$is_ranger_default) == 1L, "Unexpected grid")
+    ensure(identical(sort(unique(g$mtry)), c(4L, 11L, 33L)) && identical(sort(unique(g$min_node_size)), c(10L, 30L, 60L)),
+           "Unexpected grid values")
+    ensure(cfg$num_trees == 1000L, "Expected 1000 trees")
     set.seed(2); x <- matrix(stats::rnorm(200 * 132), 200, 132, dimnames = list(NULL, paste0("v", 1:132)))
     y <- rep(0:1, 100)
     sub <- list(config_id = "check", mtry = 33L, min_node_size = 30L, replace = FALSE, sample_fraction = .5, num_trees = 60L)
     fit <- rf_fit(x, y, sub, 1L)
     ensure(fit$mtry == 33L && fit$min.node.size == 30L && !fit$replace && fit$num.trees == 60L,
            "ranger did not receive the candidate's settings")
-    # The explicit default row must reproduce ranger's own defaults exactly.
+    # The grid's ranger-default row must reproduce ranger's own defaults exactly.
     d0 <- rf_theta(quick, cfg$hyper_grid$config_id[cfg$hyper_grid$is_ranger_default])
     implicit <- ranger::ranger(x = x, y = factor(y, levels = c("0", "1")), probability = TRUE,
                                num.trees = quick$num_trees, seed = 1L, num.threads = 1L, verbose = FALSE)

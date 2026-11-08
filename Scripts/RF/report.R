@@ -45,17 +45,12 @@ write_rf_report <- function(out, cfg, selected, hyper_scores, performance, diagn
   lines <- c("# Random forest results - supervisor protocol", "",
     paste0("Configuration: `", cfg$version, "`. A ranger probability forest on all 132 predictors (22 variables x lags 0-5) is fitted separately at h = 1, 3 and 6. ",
            "Every validation and test origin is refitted monthly on an expanding sample of labels whose outcomes ended by that origin. ",
-           if (isTRUE(cfg$tune_hyperparameters))
-             paste0("Selection follows the group standard in two stages, both on 2005-2012 validation only: (1) per horizon, the hyperparameter candidate with the lowest validation Brier among ", nrow(cfg$hyper_grid), " (mtry x min.node.size x sampling, ", cfg$num_trees, " trees); (2) with that candidate's saved validation forecasts fixed, the cutoff with the highest validation matched-ladder Sharpe at 10 bp.")
-           else paste0("**No hyperparameters are tuned**: every fit uses ranger's defaults (mtry 11, min.node.size 10, bootstrap, ", cfg$num_trees, " trees). The only validation choice is the cutoff, with the highest validation matched-ladder Sharpe at 10 bp."),
+           "Selection follows the group standard in two stages, both on 2005-2012 validation only: (1) per horizon, the hyperparameter candidate with the lowest validation Brier among ", nrow(cfg$hyper_grid), " (mtry x min.node.size x sampling, ", cfg$num_trees, " trees); (2) with that candidate's saved validation forecasts fixed, the cutoff with the highest validation matched-ladder Sharpe at 10 bp.",
            " The fixed 0.50 cutoff is reported alongside. All-stock and all-bill benchmarks use the same scored months."), "",
     "Generated automatically by `Scripts/RF/run_rf.R`. See `INTERPRETATION.md` in this folder for the written interpretation.", "",
-    if (isTRUE(cfg$tune_hyperparameters)) c(
-      "## Stage 1: hyperparameter selection (validation Brier, lower is better)", "", rf_markdown_table(hp), "",
-      "Prevalence_Brier is the Brier of forecasting the training-sample event rate known at each origin; a candidate below it has probability skill over that naive benchmark. Exact ties (1e-12) would go to larger min.node.size, then smaller mtry, then bootstrap.", "",
-      "## Stage 2: selected specification and cutoff (validation, 10 bp)", "") else
-      c("## Fixed specification (ranger defaults) and cutoff choice (validation, 10 bp)", ""),
-    rf_markdown_table(choices), "",
+    "## Stage 1: hyperparameter selection (validation Brier, lower is better)", "", rf_markdown_table(hp), "",
+    "Prevalence_Brier is the Brier of forecasting the training-sample event rate known at each origin; a candidate below it has probability skill over that naive benchmark. Exact ties (1e-12) would go to larger min.node.size, then smaller mtry, then bootstrap.", "",
+    "## Stage 2: selected specification and cutoff (validation, 10 bp)", "", rf_markdown_table(choices), "",
     sprintf("Cutoff grid (random forest only): %s. The baseline searches 0.00-1.00 in 0.01 steps. These validation Sharpe ratios are selection scores, not independent performance estimates.", paste(sprintf("%.2f", cfg$cutoffs), collapse = ", ")), "",
     "## Forecast quality (eligible completed labels)", "", rf_markdown_table(fm), "",
     "Brier_skill = 1 - Brier / Brier_prevalence; positive means better than the expanding training base rate.", "",
@@ -68,12 +63,11 @@ write_rf_report <- function(out, cfg, selected, hyper_scores, performance, diagn
     "- validation_forecasts.csv / test_forecasts.csv: one probability per origin with tuned and 0.50 cutoffs/signals, fitting audit, config_id, seed and training prevalence.",
     "- validation_cutoff_grid.csv / selected_cutoffs.csv: full cutoff search and frozen choices.",
     "- forecast_metrics.csv / calibration.csv: probability and classification diagnostics.",
-    if (isTRUE(cfg$tune_hyperparameters)) "- validation_hyperparameter_scores.csv / validation_candidate_forecasts.csv: every grid candidate's Brier scores and expanding validation forecasts." else
-      "- validation_hyperparameter_scores.csv / validation_candidate_forecasts.csv: Brier scores and validation forecasts of the single default specification (no grid search).",
+    "- validation_hyperparameter_scores.csv / validation_candidate_forecasts.csv: every grid candidate's Brier scores and expanding validation forecasts.",
     "- refit_audit.csv: every validation (all candidates) and test fit with training endpoint, sample size, seed and hyperparameters.",
     "- importance_out_of_sample.csv / importance_oob_final_fits.csv / partial_dependence.csv: interpretation outputs.",
     "- feature_names.csv, frozen_specification.rds, validation_state.rds, validation_models.rds, final_models.rds, manifest.json, input_hashes.csv, package_versions.csv, session_info.txt, tests.csv.",
-    paste0("- Figures: test_wealth.png, ", if (isTRUE(cfg$tune_hyperparameters)) "validation_hyperparameters.png, " else "", "validation_cutoffs.png, probabilities.png, importance.png, partial_dependence.png."), "",
+    "- Figures: test_wealth.png, validation_hyperparameters.png, validation_cutoffs.png, probabilities.png, importance.png, partial_dependence.png.", "",
     sprintf("%d focused test groups passed; parallel/serial spot checks, final-origin refit reproducibility, refit-count, maturity and input-hash checks all passed.", nrow(tests)))
   writeLines(lines, file.path(out, "RESULTS.md"))
 }
@@ -115,10 +109,6 @@ draw_rf_figures <- function(out, paths, grid, selected, hyper_scores, forecasts,
   graphics::mtext("Expanding validation | matched-bill cutoff objective | 10 bp costs", outer = TRUE, cex = 1.05)
   grDevices::dev.off()
 
-  hp_file <- file.path(out, "validation_hyperparameters.png")
-  if (nrow(hyper_scores) == length(cfg$horizons)) {
-    if (file.exists(hp_file)) file.remove(hp_file)   # one candidate per horizon: nothing to compare
-  } else {
   panel("validation_hyperparameters.png", height = 900)
   graphics::par(mar = c(7, 4, 3, 1))
   for (h in cfg$horizons) {
@@ -137,7 +127,6 @@ draw_rf_figures <- function(out, paths, grid, selected, hyper_scores, forecasts,
   }
   graphics::mtext("Stage 1: validation Brier for each hyperparameter candidate (m = mtry, n = min.node.size)", outer = TRUE, cex = 1)
   grDevices::dev.off()
-  }
 
   grDevices::png(file.path(out, "probabilities.png"), width = 1800, height = 1500, res = 150)
   graphics::par(mfrow = c(3, 1), mar = c(3, 4, 2.5, 1))

@@ -72,8 +72,8 @@ spot_check <- function(d, tasks, forecasts) {
 
 validation_file <- file.path(out, "validation_state.rds")
 if (stage %in% c("all", "validation")) {
-  message("Monthly expanding validation forecasts: ", nrow(cfg$hyper_grid), " hyperparameter candidate(s) x ",
-          length(cfg$horizons), " horizons", if (isTRUE(cfg$tune_hyperparameters)) "" else " (ranger defaults, no tuning)", "...")
+  message("Monthly expanding validation forecasts: ", nrow(cfg$hyper_grid), " hyperparameter candidates x ",
+          length(cfg$horizons), " horizons...")
   candidate_forecasts <- scores <- forecasts <- grids <- selections <- perturbed <- list()
   for (h in cfg$horizons) {
     d <- datasets[[as.character(h)]]
@@ -329,7 +329,7 @@ manifest <- list(version = cfg$version, model = cfg$model, completed_at = format
   monthly_validation_refits = sum(audit$period == "validation"), monthly_test_refits = sum(audit$period == "test"),
   validation_selected = selected, test_used_for_selection = FALSE, input_hashes_unchanged = TRUE,
   parallel_serial_identical = TRUE, final_origin_refits_reproduced = TRUE,
-  revision_note = "Rebuilt under the supervisor protocol; v1 RF scripts preserved in Scripts/RF/archive/v1_pre_supervisor")
+  protocol = "Group model standards (supervisor revision of 5 November 2026); RF-specific cutoff grid 0.30-0.90 by 0.05")
 jsonlite::write_json(manifest, file.path(out, "manifest.json"), auto_unbox = TRUE, pretty = TRUE, digits = 16)
 write_rf_report(out, cfg, selected, hyper_scores, performance, diagnostics, importance_oos, tests)
 draw_rf_figures(out, paths, grid, selected, hyper_scores, all_forecasts, importance_oos, pd, cfg)

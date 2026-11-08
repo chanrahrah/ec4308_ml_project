@@ -1,15 +1,13 @@
 # Random forest in R
 
-This folder implements the random forest under the supervisor revision of 5 November 2026 ([GROUP_MODEL_STANDARDS_DRAFT.md](../Models/GROUP_MODEL_STANDARDS_DRAFT.md)). It sits beside the baseline ([`../Baseline models/`](../Baseline%20models/)) and mirrors it: same data, splits, maturity rule, monthly expanding refits, cutoff rules, Sharpe references, portfolio engine and output schema. Three things differ: the estimator, the predictor set (all 132 columns), and a **coarser cutoff grid** (0.30-0.90 in steps of 0.05, against the baseline's 0.00-1.00 in steps of 0.01).
+This folder implements the random forest under the supervisor revision of 5 November 2026 ([GROUP_MODEL_STANDARDS_DRAFT.md](../Models/GROUP_MODEL_STANDARDS_DRAFT.md)). It sits beside the baseline ([`../Baseline models/`](../Baseline%20models/)) and mirrors it: same data, splits, maturity rule, monthly expanding refits, cutoff rules, Sharpe references, portfolio engine and output schema. Four things differ:
 
-**Hyperparameter switch.** `RF_TUNE_HYPERPARAMETERS` at the top of `config.R` controls tuning:
+- the estimator (a ranger probability forest);
+- the predictor set (all 132 columns);
+- a **declared 18-candidate hyperparameter grid**, chosen by validation Brier (the baselines have no hyperparameters);
+- a **coarser cutoff grid**: 0.30-0.90 in steps of 0.05, against the baseline's 0.00-1.00 in steps of 0.01.
 
-- `FALSE` (current): ranger defaults (`mtry` 11, `min.node.size` 10, bootstrap, 500 trees); only the cutoff is chosen on validation, like the probit/logit baselines.
-- `TRUE`: a declared 18-candidate grid with 1,000 trees, chosen by validation Brier before the cutoff, exactly as group-standard rules 24-28 describe.
-
-Everything else in the pipeline is identical in both modes.
-
-The v1 random-forest scripts (no tuning, 0.30-0.70 cutoff grid, CSV inputs, single Sharpe reference, charged initial allocation) are preserved unchanged in `archive/v1_pre_supervisor/`. This is a protocol-driven rebuild after v1 test results had already been inspected, not an untouched test.
+Hyperparameters and cutoff are chosen in sequence on the validation period, as group-standard rules 24-28 describe.
 
 ## Run
 
@@ -23,11 +21,11 @@ Optional stages, as in the baseline:
 
 ```sh
 Rscript --vanilla Scripts/RF/run_rf.R --stage=tests       # checks only
-Rscript --vanilla Scripts/RF/run_rf.R --stage=validation  # choose (hyperparameters +) cutoff and freeze; no test forecasts
+Rscript --vanilla Scripts/RF/run_rf.R --stage=validation  # choose hyperparameters + cutoff and freeze; no test forecasts
 Rscript --vanilla Scripts/RF/run_rf.R --stage=test        # requires identical config, code and input hashes
 ```
 
-Dependencies: `ranger`, `digest`, `jsonlite` (in `.R-library` or the user library). `EC4308_RF_WORKERS` sets the number of parallel worker processes (default: cores - 2; `1` = serial; results are identical either way). Runtime with 14 workers: about 1 minute with defaults, about 10 minutes with tuning on (5,184 validation fits for the grid search). Outputs are written to `Results/RF/` and overwritten on a rerun.
+Dependencies: `ranger`, `digest`, `jsonlite` (in `.R-library` or the user library). `EC4308_RF_WORKERS` sets the number of parallel worker processes (default: cores - 2; `1` = serial; results are identical either way). Runtime is about 10 minutes with 14 workers, almost all of it the 5,184 validation fits of the grid search. Outputs are written to `Results/RF/` and overwritten on a rerun.
 
 ## Files
 
@@ -58,19 +56,19 @@ For each horizon `rf_load_data()` reads `Data/processed/model_ready_h{h}.rds` an
 
 The seed depends only on (h, origin), so all candidates share common random numbers (their Brier differences reflect settings, not luck) and the parallel schedule cannot change any result.
 
-### 3. Validation: stage 1 (hyperparameters, only if tuning is on), then stage 2 (cutoff)
-With `RF_TUNE_HYPERPARAMETERS <- FALSE` the grid has one row, the ranger defaults, so stage 1 just records its validation Brier. With `TRUE`, the declared grid (`rf_hyper_grid()` in `config.R`), fixed before any evaluation, is:
+### 3. Validation: stage 1 (hyperparameters), then stage 2 (cutoff)
+The declared grid (`rf_hyper_grid()` in `config.R`), fixed before any evaluation:
 
 | Argument | Values |
 | --- | --- |
 | `mtry` | 4, 11 (ranger default), 33 |
 | `min.node.size` | 10 (ranger default), 30, 60 |
 | sampling | bootstrap with replacement (`sample.fraction` 1, default) or 50% subsample without replacement |
-| `num.trees` | 1000 with tuning on (500, ranger's default, with tuning off); never tuned |
+| `num.trees` | 1000, fixed (not tuned): more trees only reduce Monte Carlo noise |
 
 **Stage 1 (rules 25-26).** For January 2005 to December 2012, every one of the 18 candidates is refit monthly on the expanding mature sample (18 x 96 x 3 = 5,184 fits). Each candidate's 96 forecasts are scored by Brier on eligible completed labels (95/93/90 rows). Per horizon, the lowest Brier wins; exact ties (1e-12) go to the simpler candidate (larger `min.node.size`, then smaller `mtry`, then bootstrap). OOB error and random CV are never used.
 
-**Stage 2 (rules 27-28).** With the winner's **saved** validation forecasts held fixed, each of the 13 cutoffs 0.30, 0.35, ..., 0.90 is run through the shared portfolio engine at 10 bp. The cutoff that maximizes `sharpe_matched_ladder` is chosen; undefined Sharpes are excluded, and ties go to the cutoff nearest 0.50, then the lower one. The fixed 0.50 comparator is recorded too. The coarser cutoff grid is a deliberate RF-only change from the protocol's 0.01 grid.
+**Stage 2 (rules 27-28).** With the winner's **saved** validation forecasts held fixed, each of the 13 cutoffs 0.30, 0.35, ..., 0.90 is run through the shared portfolio engine at 10 bp. The cutoff that maximizes `sharpe_matched_ladder` is chosen; undefined Sharpes are excluded, and ties go to the cutoff nearest 0.50, then the lower one. The fixed 0.50 comparator is recorded too. The coarser cutoff grid is a declared RF-specific departure from the protocol's 0.01 grid (rule 28). Searching 13 cutoffs instead of 101 on only 96 validation months limits how finely the cutoff can be fitted to individual validation episodes.
 
 The selected hyperparameters, cutoffs, config, input hashes and code hashes are saved to `frozen_specification.rds` **before** any test origin is forecast.
 
