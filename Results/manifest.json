@@ -1,0 +1,52 @@
+{
+  "version": "elastic_net_v1_recursive_2026_11_07",
+  "selected": [
+    {
+      "h": 1,
+      "model": "elastic_net",
+      "alpha": 1,
+      "lambda_ratio": 1,
+      "validation_Brier": 0.24064763228141431,
+      "n_validation": 95,
+      "mean_nonzero": 0,
+      "cutoff": 0.5,
+      "validation_sharpe_matched_ladder": 0.29062557446728959,
+      "validation_sharpe_common_rf": 0.29062557446728959,
+      "fixed_050_validation_sharpe_matched_ladder": 0.29062557446728959,
+      "selection_cost": 0.001
+    },
+    {
+      "h": 3,
+      "model": "elastic_net",
+      "alpha": 1,
+      "lambda_ratio": 1,
+      "validation_Brier": 0.23479844225050861,
+      "n_validation": 93,
+      "mean_nonzero": 0,
+      "cutoff": 0.5,
+      "validation_sharpe_matched_ladder": 0.28704210139473563,
+      "validation_sharpe_common_rf": 0.29269263971122172,
+      "fixed_050_validation_sharpe_matched_ladder": 0.28704210139473563,
+      "selection_cost": 0.001
+    },
+    {
+      "h": 6,
+      "model": "elastic_net",
+      "alpha": 1,
+      "lambda_ratio": 1,
+      "validation_Brier": 0.22158046452324473,
+      "n_validation": 90,
+      "mean_nonzero": 0,
+      "cutoff": 0.5,
+      "validation_sharpe_matched_ladder": 0.26918028918701198,
+      "validation_sharpe_common_rf": 0.28510830658689157,
+      "fixed_050_validation_sharpe_matched_ladder": 0.26918028918701198,
+      "selection_cost": 0.001
+    }
+  ],
+  "input_hashes": ["0aa88025b4cb3f5a69f858750569217e6f80d86947a24a4e30e520cbe22ff9cc", "d39b1a1804ad742273380bc8ea0d8fa990089426852d9fbdd85b51dd1c92e6cc", "2cd986491c71e9e37ce9661f4c040ac70530c984b90728859aa3919d9dcdde4b", "8bae185a75ea7712da6222d47df60540ecc8bd09f18ecec095c43b5f9b984471", "25a5ff5ca50ff24345709eb5bea334ae5b982201c7eacf8ea03f6b152cfc94ee"],
+  "code_hashes": ["591d4a1c98401e50be71174a8c08110f3d9a22c8178eda0c6d397efba212c909", "fbc96c5ef9cc54acbac345c3f285a56a71979ef89e7a869617eebcef3ec93b39", "0ef2724e94538c465d62a3df069f7938b570c9005455f30fc26f21d8a7533a7f", "eb5479d60ea540604041fa665b56be6218696e202e1f3f9f832ff7d81702a74f", "2c1a5a56baadbb88c2d48266743c032fbcd447e9596355932fc22dbb3f8b7826", "4c3ae94be2000b8ca98f503dbabeb11a4a726dc321efe30953aed7b6b2cde6f7"],
+  "tests_passed": 14,
+  "test_used_for_selection": false,
+  "note": "Protocol revised after earlier baseline test inspection; do not characterize as virgin holdout"
+}
