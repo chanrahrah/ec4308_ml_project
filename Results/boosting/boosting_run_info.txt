@@ -1,0 +1,153 @@
+spec: GROUP_MODEL_STANDARDS_DRAFT.md (supervisor revision 2026-11-05)
+R: R version 4.4.2 (2024-10-31 ucrt)
+xgboost: 3.2.1.1
+seed base: 4308 (per-fit seed = base + h*100003 + origin index)
+grid depth: 1, 2, 3 | eta: 0.02, 0.05, 0.1 | nrounds: 50, 100, 200, 400
+fixed: subsample 0.7 colsample_bytree 0.5 min_child_weight 5 lambda 1 nthread 1
+tie rule (Brier within 1e-12): lowest max_depth, then fewest rounds, then lowest eta
+cutoff grid: seq(0,1,by= 0.01 ) | tie rule: nearest 0.50, then lower; undefined Sharpe excluded; stop if none defined
+
+source hashes (md5):
+C:/Users/User/Documents/ec4308_ml_project/Data/processed/model_data_h1.csv 8ed95d9ddbac3002f063f2d52738d34c
+C:/Users/User/Documents/ec4308_ml_project/Data/processed/model_data_h3.csv 274cd66017f6ac047fa0dbd6c707b578
+C:/Users/User/Documents/ec4308_ml_project/Data/processed/model_data_h6.csv 7d134e7d2d4a61da5b9b0b1c298777ba
+C:/Users/User/Documents/ec4308_ml_project/Data/processed/features_h1_132.csv 06ac355367cd30626c5228c4b0b5e95a
+C:/Users/User/Documents/ec4308_ml_project/Data/processed/features_h3_132.csv dd596e6c35df26e85ffb3a48ff7669ff
+C:/Users/User/Documents/ec4308_ml_project/Data/processed/features_h6_132.csv a820ca35ef917560734a3bc4412dddb9
+C:/Users/User/Documents/ec4308_ml_project/Data/processed/base_raw_h1.csv d014dcbf46ac5cf99194d58273cc98d3
+C:/Users/User/Documents/ec4308_ml_project/Data/processed/base_raw_h3.csv f4b7ef507903b04d41dfc5e0ec2bc3b3
+C:/Users/User/Documents/ec4308_ml_project/Data/processed/base_raw_h6.csv 559bd78193c37d2aa3f1357f901c7a10
+
+feature names (132):
+mkt_excess_lag0
+mkt_excess_lag1
+mkt_excess_lag2
+mkt_excess_lag3
+mkt_excess_lag4
+mkt_excess_lag5
+mom3_lag0
+mom3_lag1
+mom3_lag2
+mom3_lag3
+mom3_lag4
+mom3_lag5
+mom6_lag0
+mom6_lag1
+mom6_lag2
+mom6_lag3
+mom6_lag4
+mom6_lag5
+mom12_lag0
+mom12_lag1
+mom12_lag2
+mom12_lag3
+mom12_lag4
+mom12_lag5
+log_rv_lag0
+log_rv_lag1
+log_rv_lag2
+log_rv_lag3
+log_rv_lag4
+log_rv_lag5
+downside_share_lag0
+downside_share_lag1
+downside_share_lag2
+downside_share_lag3
+downside_share_lag4
+downside_share_lag5
+drawdown12_lag0
+drawdown12_lag1
+drawdown12_lag2
+drawdown12_lag3
+drawdown12_lag4
+drawdown12_lag5
+log_dp_change1_lag0
+log_dp_change1_lag1
+log_dp_change1_lag2
+log_dp_change1_lag3
+log_dp_change1_lag4
+log_dp_change1_lag5
+bill_yld_rel36_lag0
+bill_yld_rel36_lag1
+bill_yld_rel36_lag2
+bill_yld_rel36_lag3
+bill_yld_rel36_lag4
+bill_yld_rel36_lag5
+bill_yld_chg_lag0
+bill_yld_chg_lag1
+bill_yld_chg_lag2
+bill_yld_chg_lag3
+bill_yld_chg_lag4
+bill_yld_chg_lag5
+term_spread_change1_lag0
+term_spread_change1_lag1
+term_spread_change1_lag2
+term_spread_change1_lag3
+term_spread_change1_lag4
+term_spread_change1_lag5
+short_slope_change1_lag0
+short_slope_change1_lag1
+short_slope_change1_lag2
+short_slope_change1_lag3
+short_slope_change1_lag4
+short_slope_change1_lag5
+cpi_infl_change1_lag0
+cpi_infl_change1_lag1
+cpi_infl_change1_lag2
+cpi_infl_change1_lag3
+cpi_infl_change1_lag4
+cpi_infl_change1_lag5
+breadth_lag0
+breadth_lag1
+breadth_lag2
+breadth_lag3
+breadth_lag4
+breadth_lag5
+ma_part_lag0
+ma_part_lag1
+ma_part_lag2
+ma_part_lag3
+ma_part_lag4
+ma_part_lag5
+hi_lo_lag0
+hi_lo_lag1
+hi_lo_lag2
+hi_lo_lag3
+hi_lo_lag4
+hi_lo_lag5
+log_dispersion_change1_lag0
+log_dispersion_change1_lag1
+log_dispersion_change1_lag2
+log_dispersion_change1_lag3
+log_dispersion_change1_lag4
+log_dispersion_change1_lag5
+ew_vw_lag0
+ew_vw_lag1
+ew_vw_lag2
+ew_vw_lag3
+ew_vw_lag4
+ew_vw_lag5
+tail_imb_change1_lag0
+tail_imb_change1_lag1
+tail_imb_change1_lag2
+tail_imb_change1_lag3
+tail_imb_change1_lag4
+tail_imb_change1_lag5
+turnover_dt_lag0
+turnover_dt_lag1
+turnover_dt_lag2
+turnover_dt_lag3
+turnover_dt_lag4
+turnover_dt_lag5
+unrate_rel36_lag0
+unrate_rel36_lag1
+unrate_rel36_lag2
+unrate_rel36_lag3
+unrate_rel36_lag4
+unrate_rel36_lag5
+baa10ym_rel36_lag0
+baa10ym_rel36_lag1
+baa10ym_rel36_lag2
+baa10ym_rel36_lag3
+baa10ym_rel36_lag4
+baa10ym_rel36_lag5

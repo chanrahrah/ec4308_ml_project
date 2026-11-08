@@ -1,0 +1,5 @@
+package,version
+data.table,1.16.4
+jsonlite,1.8.9
+digest,0.6.37
+urca,1.3.4
