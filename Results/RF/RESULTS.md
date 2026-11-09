@@ -73,7 +73,7 @@ Prevalence_Brier is the Brier of forecasting the training-sample event rate know
 | 3 | rf_mtry04_node10_boot |  4 | 10 | bootstrap | 0.2277 | 0.2305 | 0.2348 | 0.70 | 0.630 | 0.256 |
 | 6 | rf_mtry04_node10_sub50 |  4 | 10 | 50% subsample | 0.2189 | 0.2279 | 0.2216 | 0.80 | 0.881 | 0.269 |
 
-Cutoff grid (random forest only): 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90. The baseline searches 0.00-1.00 in 0.01 steps. These validation Sharpe ratios are selection scores, not independent performance estimates.
+Cutoff grid (random forest only): 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00. The baseline searches 0.00-1.00 in 0.01 steps. These validation Sharpe ratios are selection scores, not independent performance estimates.
 
 ## Forecast quality (eligible completed labels)
 

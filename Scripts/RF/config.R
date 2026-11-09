@@ -44,8 +44,8 @@ rf_config <- function() list(
   train_end = "2004-12", validation_start = "2005-01", validation_end = "2012-12",
   test_start = "2013-01", test_end = "2025-12",
   # Cutoff grid for the random forest only (the baseline keeps 0.00-1.00 by 0.01):
-  # 0.30, 0.35, ..., 0.90 (13 values). Built from integers so 0.50 is exact.
-  cutoffs = seq(30L, 90L, by = 5L) / 100, primary_cost = 0.001,
+  # 0.00, 0.05, ..., 1.00 (21 values). Built from integers so 0.50 is exact.
+  cutoffs = seq(0L, 100L, by = 5L) / 100, primary_cost = 0.001,
   costs = c(0, 0.001, 0.002), risk_aversion = 3,
   validation_refit = "monthly_expanding", test_refit = "monthly_expanding",
   cutoff_objective = "sharpe_matched_ladder", comparison_cutoff = 0.50,

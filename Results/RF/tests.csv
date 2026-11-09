@@ -4,7 +4,7 @@
 "Class ordering: probability is P(Y = 1)",TRUE
 "Declared 18-candidate hyperparameter grid",TRUE
 "Brier tie rule favours the simpler candidate",TRUE
-"RF cutoff grid 0.30-0.90 by 0.05 contains the 0.50 comparator",TRUE
+"RF cutoff grid 0.00-1.00 by 0.05 contains the 0.50 comparator",TRUE
 "Cutoff tie rule and undefined Sharpe exclusion (shared)",TRUE
 "Exactly the 132 frozen predictors and no metadata h 1",TRUE
 "Boundary maturity and future-perturbation invariance h 1",TRUE

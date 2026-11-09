@@ -5,7 +5,7 @@ This folder implements the random forest under the supervisor revision of 5 Nove
 - the estimator (a ranger probability forest);
 - the predictor set (all 132 columns);
 - a **declared 18-candidate hyperparameter grid**, chosen by validation Brier (the baselines have no hyperparameters);
-- a **coarser cutoff grid**: 0.30-0.90 in steps of 0.05, against the baseline's 0.00-1.00 in steps of 0.01.
+- a **coarser cutoff grid**: 0.00-1.00 in steps of 0.05, against the baseline's 0.00-1.00 in steps of 0.01.
 
 Hyperparameters and cutoff are chosen in sequence on the validation period, as group-standard rules 24-28 describe.
 
@@ -68,7 +68,7 @@ The declared grid (`rf_hyper_grid()` in `config.R`), fixed before any evaluation
 
 **Stage 1 (rules 25-26).** For January 2005 to December 2012, every one of the 18 candidates is refit monthly on the expanding mature sample (18 x 96 x 3 = 5,184 fits). Each candidate's 96 forecasts are scored by Brier on eligible completed labels (95/93/90 rows). Per horizon, the lowest Brier wins; exact ties (1e-12) go to the simpler candidate (larger `min.node.size`, then smaller `mtry`, then bootstrap). OOB error and random CV are never used.
 
-**Stage 2 (rules 27-28).** With the winner's **saved** validation forecasts held fixed, each of the 13 cutoffs 0.30, 0.35, ..., 0.90 is run through the shared portfolio engine at 10 bp. The cutoff that maximizes `sharpe_matched_ladder` is chosen; undefined Sharpes are excluded, and ties go to the cutoff nearest 0.50, then the lower one. The fixed 0.50 comparator is recorded too. The coarser cutoff grid is a declared RF-specific departure from the protocol's 0.01 grid (rule 28). Searching 13 cutoffs instead of 101 on only 96 validation months limits how finely the cutoff can be fitted to individual validation episodes.
+**Stage 2 (rules 27-28).** With the winner's **saved** validation forecasts held fixed, each of the 21 cutoffs 0.00, 0.05, ..., 1.00 is run through the shared portfolio engine at 10 bp. The cutoff that maximizes `sharpe_matched_ladder` is chosen; undefined Sharpes are excluded, and ties go to the cutoff nearest 0.50, then the lower one. The fixed 0.50 comparator is recorded too. The coarser cutoff grid is a declared RF-specific departure from the protocol's 0.01 grid (rule 28). Searching 13 cutoffs instead of 101 on only 96 validation months limits how finely the cutoff can be fitted to individual validation episodes.
 
 The selected hyperparameters, cutoffs, config, input hashes and code hashes are saved to `frozen_specification.rds` **before** any test origin is forecast.
 

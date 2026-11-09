@@ -53,9 +53,9 @@ run_rf_tests <- function(root, cfg) {
     sc$Brier[2] <- .18
     ensure(rf_choose_candidate(sc) == 2L, "Strictly lower Brier must win")
   })
-  check("RF cutoff grid 0.30-0.90 by 0.05 contains the 0.50 comparator", {
-    ensure(length(cfg$cutoffs) == 13L && isTRUE(all.equal(range(cfg$cutoffs), c(.3, .9))) &&
-             isTRUE(all.equal(diff(cfg$cutoffs), rep(.05, 12))), "Unexpected cutoff grid")
+  check("RF cutoff grid 0.00-1.00 by 0.05 contains the 0.50 comparator", {
+    ensure(length(cfg$cutoffs) == 21L && isTRUE(all.equal(range(cfg$cutoffs), c(0, 1))) &&
+             isTRUE(all.equal(diff(cfg$cutoffs), rep(.05, 20))), "Unexpected cutoff grid")
     ensure(sum(abs(cfg$cutoffs - cfg$comparison_cutoff) < 1e-12) == 1L, "0.50 missing from grid")
   })
   check("Cutoff tie rule and undefined Sharpe exclusion (shared)", {

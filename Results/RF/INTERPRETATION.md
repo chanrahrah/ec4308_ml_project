@@ -5,7 +5,7 @@ Numbers come from `Scripts/RF/run_rf.R` (configuration `rf_v2_supervisor_2026_11
 The specification follows the group model standards:
 
 - **Hyperparameters:** chosen per horizon by validation Brier from a declared 18-candidate grid.
-- **Cutoff:** chosen by validation matched-ladder Sharpe over 0.30–0.90 in steps of 0.05.
+- **Cutoff:** chosen by validation matched-ladder Sharpe over 0.00–1.00 in steps of 0.05.
 - **Comparison rule:** the fixed 0.50 cutoff, reported alongside.
 
 All choices use the 2005–2012 validation period only and are frozen before any test forecast is made. Returns and Sharpe ratios are net of 10 bp costs unless stated otherwise. "Sharpe" means the horizon-matched ladder Sharpe; the common 4-week Sharpe is almost identical (see `RESULTS.md`).
@@ -26,8 +26,8 @@ All choices use the 2005–2012 validation period only and are frozen before any
 | Fitting | Refit every month on all labels whose outcome had ended by that origin (96 validation + 156 test fits per horizon) |
 | Hyperparameter grid (declared before evaluation) | `mtry` ∈ {4, 11, 33} × `min.node.size` ∈ {10, 30, 60} × sampling ∈ {bootstrap, 50% subsample without replacement}; 1,000 trees; same seed per (horizon, month) for every candidate |
 | Stage 1 | Per horizon, lowest validation Brier (90–95 completed labels); exact ties go to the simpler candidate |
-| Stage 2 | With the winner's saved validation forecasts, the cutoff in {0.30, 0.35, …, 0.90} with the highest validation Sharpe at 10 bp |
-| Departure from the group protocol | The baseline searches cutoffs 0.00–1.00 in steps of 0.01 (rule 28). The RF uses a coarser, narrower grid to limit how finely the cutoff can be fitted to 96 validation months. |
+| Stage 2 | With the winner's saved validation forecasts, the cutoff in {0.00, 0.05, …, 1.00} (21 values) with the highest validation Sharpe at 10 bp |
+| Departure from the group protocol | The baseline searches cutoffs 0.00–1.00 in steps of 0.01 (rule 28). The RF covers the same range in coarser 0.05 steps, to limit how finely the cutoff can be fitted to 96 validation months. |
 
 ### Stage 1: hyperparameters (validation Brier, lower is better)
 
@@ -51,7 +51,7 @@ How to read this (full table in `RESULTS.md`, picture in `validation_hyperparame
 
 | Cutoff | h = 1 | h = 3 | h = 6 |
 | --- | --- | --- | --- |
-| 0.30–0.40 | 0.29 | 0.29 | 0.27 |
+| 0.00–0.40 | 0.29 | 0.29 | 0.27 |
 | 0.45 | 0.23 | 0.29 | 0.27 |
 | 0.50 | 0.38 | 0.26 | 0.27 |
 | 0.55 | 0.14 | 0.34 | 0.29 |
@@ -60,8 +60,10 @@ How to read this (full table in `RESULTS.md`, picture in `validation_hyperparame
 | 0.70 | 0.50 | **0.63** | 0.57 |
 | 0.75 | 0.44 | 0.33 | 0.63 |
 | 0.80 | 0.35 | n/a | **0.88** |
-| 0.85–0.90 | n/a (all bills) | n/a | n/a |
+| 0.85–1.00 | n/a (all bills) | n/a | n/a |
 | All stocks | 0.29 | 0.29 | 0.27 |
+
+Widening the grid from 0.30–0.90 to 0.00–1.00 changed no selection. Every validation forecast lies between roughly 0.40 and 0.85, so every cutoff of 0.40 or below is identical to all stocks. Every cutoff of 0.85 or above (0.80 or above at h = 3) is all bills, whose Sharpe is undefined (n/a). The informative part of the grid is therefore about 0.45–0.80, the same as before.
 
 ### Validation portfolios (10 bp)
 
@@ -195,8 +197,8 @@ The baseline was run from its own scripts with the same data, splits and portfol
 ## 7. Caveats
 
 - **Weak evidence.** The test has 150–156 monthly observations with one major regime (a long bull market). No dependence-robust significance test was run.
-- **Validation scores are selection scores.** The 18-candidate search, followed by the 13-cutoff search on the same 96 months, makes the reported validation Brier and Sharpe optimistic (rule 30).
-- **Declared departure from the group protocol.** The cutoff grid (0.30–0.90 by 0.05) differs from the protocol's 0.00–1.00 by 0.01. State this wherever RF tuned-cutoff results are compared with other models.
+- **Validation scores are selection scores.** The 18-candidate search, followed by the 21-cutoff search on the same 96 months, makes the reported validation Brier and Sharpe optimistic (rule 30).
+- **Declared departure from the group protocol.** The cutoff grid (0.00–1.00 by 0.05) covers the protocol's range but in coarser steps than its 0.01. State this wherever RF tuned-cutoff results are compared with other models.
 - **Importance is descriptive, not causal.** Correlated predictors share credit; permutation across origins breaks correlations between variables; OOB importance is optimistic because labels overlap.
 - **Macro data are current-vintage proxies** (see `Scripts/VARIABLES.md`). Since `unrate_rel36` drives the forest, unemployment revisions matter more for this model than for others.
 - **Monte Carlo noise.** With 1,000 trees, each probability carries roughly a 1.3-percentage-point Monte Carlo standard error. That can flip signals near a cutoff, and it is the same order as the Brier gaps between top candidates. Results are exactly reproducible under the fixed seeds.

@@ -329,7 +329,7 @@ manifest <- list(version = cfg$version, model = cfg$model, completed_at = format
   monthly_validation_refits = sum(audit$period == "validation"), monthly_test_refits = sum(audit$period == "test"),
   validation_selected = selected, test_used_for_selection = FALSE, input_hashes_unchanged = TRUE,
   parallel_serial_identical = TRUE, final_origin_refits_reproduced = TRUE,
-  protocol = "Group model standards (supervisor revision of 5 November 2026); RF-specific cutoff grid 0.30-0.90 by 0.05")
+  protocol = "Group model standards (supervisor revision of 5 November 2026); RF-specific cutoff grid 0.00-1.00 by 0.05")
 jsonlite::write_json(manifest, file.path(out, "manifest.json"), auto_unbox = TRUE, pretty = TRUE, digits = 16)
 write_rf_report(out, cfg, selected, hyper_scores, performance, diagnostics, importance_oos, tests)
 draw_rf_figures(out, paths, grid, selected, hyper_scores, all_forecasts, importance_oos, pd, cfg)
