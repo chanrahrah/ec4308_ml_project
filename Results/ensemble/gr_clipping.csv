@@ -1,0 +1,8 @@
+"period","h","n","n_clipped","n_below_0","n_above_1"
+"validation",1,96,0,0,0
+"validation",3,96,0,0,0
+"validation",6,96,0,0,0
+"test",1,156,0,0,0
+"test",3,156,0,0,0
+"test",6,156,0,0,0
+"test_yearly",,468,0,0,0

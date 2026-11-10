@@ -1,0 +1,248 @@
+{
+  "version": "ensemble_v3_2026_11_10",
+  "completed_at": "2026-11-10 22:27:15 +08",
+  "members": ["random_forest", "elastic_net", "boosting"],
+  "ensembles": ["ens_majority_vote", "ens_equal", "ens_gr"],
+  "vote_rule": "each member's frozen validation cutoff; stocks if sum(signals) > M/2; ties to bills (rule 51)",
+  "gr_fit": "once per horizon on eligible validation labels (rules 53-54)",
+  "probability_cutoff": 0.5,
+  "gr_weights": [
+    {
+      "h": 1,
+      "member": "random_forest",
+      "weight": 0,
+      "intercept": -0.00310531693454539,
+      "n_rows": 95,
+      "sse": 22.6267331838155,
+      "status": "ok",
+      "first_origin": "2005-01",
+      "last_origin": "2012-11",
+      "last_outcome": "2012-12"
+    },
+    {
+      "h": 1,
+      "member": "elastic_net",
+      "weight": 0.249401347802281,
+      "intercept": -0.00310531693454539,
+      "n_rows": 95,
+      "sse": 22.6267331838155,
+      "status": "ok",
+      "first_origin": "2005-01",
+      "last_origin": "2012-11",
+      "last_outcome": "2012-12"
+    },
+    {
+      "h": 1,
+      "member": "boosting",
+      "weight": 0.750598652197719,
+      "intercept": -0.00310531693454539,
+      "n_rows": 95,
+      "sse": 22.6267331838155,
+      "status": "ok",
+      "first_origin": "2005-01",
+      "last_origin": "2012-11",
+      "last_outcome": "2012-12"
+    },
+    {
+      "h": 3,
+      "member": "random_forest",
+      "weight": 1,
+      "intercept": 0.021387173579109,
+      "n_rows": 93,
+      "sse": 21.1341904739267,
+      "status": "ok",
+      "first_origin": "2005-01",
+      "last_origin": "2012-09",
+      "last_outcome": "2012-12"
+    },
+    {
+      "h": 3,
+      "member": "elastic_net",
+      "weight": 0,
+      "intercept": 0.021387173579109,
+      "n_rows": 93,
+      "sse": 21.1341904739267,
+      "status": "ok",
+      "first_origin": "2005-01",
+      "last_origin": "2012-09",
+      "last_outcome": "2012-12"
+    },
+    {
+      "h": 3,
+      "member": "boosting",
+      "weight": 0,
+      "intercept": 0.021387173579109,
+      "n_rows": 93,
+      "sse": 21.1341904739267,
+      "status": "ok",
+      "first_origin": "2005-01",
+      "last_origin": "2012-09",
+      "last_outcome": "2012-12"
+    },
+    {
+      "h": 6,
+      "member": "random_forest",
+      "weight": 0,
+      "intercept": -0.00629956391122609,
+      "n_rows": 90,
+      "sse": 18.9723496972521,
+      "status": "ok",
+      "first_origin": "2005-01",
+      "last_origin": "2012-06",
+      "last_outcome": "2012-12"
+    },
+    {
+      "h": 6,
+      "member": "elastic_net",
+      "weight": 0,
+      "intercept": -0.00629956391122609,
+      "n_rows": 90,
+      "sse": 18.9723496972521,
+      "status": "ok",
+      "first_origin": "2005-01",
+      "last_origin": "2012-06",
+      "last_outcome": "2012-12"
+    },
+    {
+      "h": 6,
+      "member": "boosting",
+      "weight": 1,
+      "intercept": -0.00629956391122609,
+      "n_rows": 90,
+      "sse": 18.9723496972521,
+      "status": "ok",
+      "first_origin": "2005-01",
+      "last_origin": "2012-06",
+      "last_outcome": "2012-12"
+    }
+  ],
+  "shared_config": "baseline_v2_supervisor_2026_11_05",
+  "input_hashes": {
+    "Results/RF/validation_forecasts.csv": "6e34c07cd41e37aabc269612fdbb7bb3fe6254cc352cc437dbb41e80fee6fae1",
+    "Results/RF/test_forecasts.csv": "a8a5bf4bb022c0938c61d5441313d4c523f61cda19c8af09537a2881f0f04cbb",
+    "Results/elastic_net/validation_forecasts.csv": "2323662b3e97e4b7b50216a4f5591e00cfd63ea7a9e12371d6d6257541e51577",
+    "Results/elastic_net/test_forecasts.csv": "00eb288ea5be2159aff7c61d0e238075b52e5943a9139764a34ae2f1619b7468",
+    "Results/boosting/boosting_validation_probabilities.csv": "366cbd52b7ad4d6a611a81c9cc669b00e863d19addd9b77565f6dfa41296974a",
+    "Results/boosting/boosting_test_probabilities.csv": "3799aff80d53d0bd270c1e45fd42f3425196de99f1eadfb7950f3083c562b22d",
+    "Data/crsp_monthly_index_data/crsp_monthly_index_data.csv": "8bae185a75ea7712da6222d47df60540ecc8bd09f18ecec095c43b5f9b984471",
+    "Data/crsp_treasury_risk_free_series_data/crsp_treasury_risk_free_series_data.csv": "25a5ff5ca50ff24345709eb5bea334ae5b982201c7eacf8ea03f6b152cfc94ee"
+  },
+  "code_hashes": {
+    "config.R": "cd1ddeeddae25b96c618cb7b23c837513a0a250e43e687cb28d37732b8a6edc9",
+    "ensemble.R": "2756c5c3deb7dcf3a2fdd7cf7ec6c02cb0a0226288b78264c662850f0c941139",
+    "make_results.R": "b177ea4ad5dd427f2f64ab6021ca311e0d277e96ca9c5589c0879e9b32ce74f3",
+    "run_ensemble.R": "9c66ee3ce8533d471e5e0a83b009f5273ec308d8f8d306907447decf42f4c077",
+    "tests.R": "695d41c6f291f784d95d0a94a727681c755fe026021a84a6c31b3306fdc3c121"
+  },
+  "tests_passed": 13,
+  "evaluator_crosscheck": [
+    {
+      "member": "random_forest",
+      "metric": "sharpe_matched_ladder",
+      "rows": 36,
+      "max_abs_diff": 4.44089209850063e-16
+    },
+    {
+      "member": "random_forest",
+      "metric": "sharpe_common_rf",
+      "rows": 36,
+      "max_abs_diff": 3.10862446895044e-15
+    },
+    {
+      "member": "random_forest",
+      "metric": "CAGR",
+      "rows": 36,
+      "max_abs_diff": 4.9960036108132e-16
+    },
+    {
+      "member": "random_forest",
+      "metric": "max_drawdown",
+      "rows": 36,
+      "max_abs_diff": 4.9960036108132e-16
+    },
+    {
+      "member": "random_forest",
+      "metric": "Calmar",
+      "rows": 36,
+      "max_abs_diff": 4.88498130835069e-15
+    },
+    {
+      "member": "random_forest",
+      "metric": "annual_turnover",
+      "rows": 36,
+      "max_abs_diff": 4.44089209850063e-15
+    },
+    {
+      "member": "elastic_net",
+      "metric": "sharpe_matched_ladder",
+      "rows": 36,
+      "max_abs_diff": 4.44089209850063e-16
+    },
+    {
+      "member": "elastic_net",
+      "metric": "sharpe_common_rf",
+      "rows": 36,
+      "max_abs_diff": 5.55111512312578e-16
+    },
+    {
+      "member": "elastic_net",
+      "metric": "CAGR",
+      "rows": 36,
+      "max_abs_diff": 3.60822483003176e-16
+    },
+    {
+      "member": "elastic_net",
+      "metric": "max_drawdown",
+      "rows": 36,
+      "max_abs_diff": 6.66133814775094e-16
+    },
+    {
+      "member": "elastic_net",
+      "metric": "Calmar",
+      "rows": 36,
+      "max_abs_diff": 4.44089209850063e-16
+    },
+    {
+      "member": "elastic_net",
+      "metric": "annual_turnover",
+      "rows": 36,
+      "max_abs_diff": 0
+    },
+    {
+      "member": "boosting",
+      "metric": "sharpe_matched_ladder",
+      "rows": 36,
+      "max_abs_diff": 5.99520433297585e-15
+    },
+    {
+      "member": "boosting",
+      "metric": "sharpe_common_rf",
+      "rows": 36,
+      "max_abs_diff": 1.02140518265514e-14
+    },
+    {
+      "member": "boosting",
+      "metric": "CAGR",
+      "rows": 36,
+      "max_abs_diff": 4.85722573273506e-16
+    },
+    {
+      "member": "boosting",
+      "metric": "max_drawdown",
+      "rows": 36,
+      "max_abs_diff": 1.0547118733939e-15
+    },
+    {
+      "member": "boosting",
+      "metric": "Calmar",
+      "rows": 36,
+      "max_abs_diff": 2.35367281220533e-14
+    },
+    {
+      "member": "boosting",
+      "metric": "annual_turnover",
+      "rows": 36,
+      "max_abs_diff": 4.88498130835069e-15
+    }
+  ]
+}
