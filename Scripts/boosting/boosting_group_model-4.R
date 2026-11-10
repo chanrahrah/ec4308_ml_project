@@ -8,17 +8,39 @@
 #      theta; each fit uses only labels with outcome_end <= forecast origin.   [r.17,25]
 #   2. theta* = lowest validation Brier on eligible labels (tie rule below).    [r.25-26]
 #   3. Cutoff c* = argmax horizon-matched net Sharpe at 10bp on the saved
-#      validation probabilities of theta* (grid seq(0,1,.01)); 0.50 reported too. [r.28-29]
+#      validation probabilities of theta* (grid seq(0,1,.05)); 0.50 reported too. [r.28-29]
 #   4. Monthly expanding TEST fits (Jan 2013-Dec 2025) with theta*, c* frozen.   [r.30]
 #   5. Export probabilities (rule-66 schema), audits, portfolio paths, metrics.  [r.66-68]
 #
 # Run:  Rscript boosting_group_model.R            (full)
 #       QUICK=1 H=3 Rscript boosting_group_model.R (smoke test: tiny grid)
-# Place in <project>/Scripts/boosting/. Reads model_data_h*.csv, features_h*_132.csv, base_raw_h*.csv
-# from Data/processed/ (found automatically); writes to Results/boosting/.
-# Env:  EC4308_ROOT = project root override; EC4308_DATA = data folder override;
-#       EC4308_OUT = output folder override
+# Reads the SAME model RDS and raw CRSP return files as the Elastic Net pipeline.
+# Finds the project root from this script; override with EC4308_ROOT or
+# options(ec4308.project_root="path/to/project"). Writes to Results/boosting/.
+# Output is fixed at <project>/Results/boosting/. Cutoff step is fixed at 0.01.
+# Missing xgboost is installed automatically from CRAN on the first run.
 # =============================================================================
+# Install only when missing; existing installations are left unchanged.
+project_user_lib <- file.path(path.expand("~"), "R", "EC4308-library",
+                             paste(R.version$major, sub("\\..*$", "", R.version$minor), sep="."))
+if (dir.exists(project_user_lib)) .libPaths(unique(c(.libPaths(), project_user_lib)))
+if (!requireNamespace("xgboost", quietly = TRUE)) {
+  install_lib <- .libPaths()[1L]
+  if (file.access(install_lib, 2L) != 0L) {
+    install_lib <- file.path(path.expand("~"), "R", "EC4308-library",
+                             paste(R.version$major, sub("\\..*$", "", R.version$minor), sep="."))
+    dir.create(install_lib, recursive = TRUE, showWarnings = FALSE)
+  }
+  .libPaths(unique(c(install_lib, .libPaths())))
+  message("Installing xgboost and required dependencies from CRAN into: ", install_lib)
+  tryCatch(
+    utils::install.packages("xgboost", repos = "https://cloud.r-project.org", lib = install_lib),
+    error = function(e) stop("xgboost installation failed: ", conditionMessage(e), call. = FALSE)
+  )
+  if (!requireNamespace("xgboost", quietly = TRUE))
+    stop("xgboost is still unavailable. Check the installation messages above (R version or build tools may need updating).",
+         call. = FALSE)
+}
 suppressPackageStartupMessages(library(xgboost))
 
 # ---- project paths -----------------------------------------------------------
@@ -35,28 +57,41 @@ script_dir <- function() {
   getwd()
 }
 find_root <- function() {
-  ov <- Sys.getenv("EC4308_ROOT"); if (nzchar(ov)) return(normalizePath(ov))
-  for (start in unique(c(script_dir(), getwd()))) {
-    d <- normalizePath(start)
-    repeat { if (dir.exists(file.path(d, "Data")) && dir.exists(file.path(d, "Scripts"))) return(d)
-      up <- dirname(d); if (up == d) break; d <- up }
+  root_override <- getOption("ec4308.project_root", "")
+  if (!nzchar(root_override)) root_override <- Sys.getenv("EC4308_ROOT", "")
+  if (nzchar(root_override)) {
+    root <- normalizePath(path.expand(root_override), mustWork = TRUE)
+    if (!dir.exists(file.path(root, "Data")) || !dir.exists(file.path(root, "Scripts")))
+      stop("Project root must contain Data/ and Scripts/: ", root, call. = FALSE)
+    return(root)
   }
-  stop("Could not find the project root (a folder containing Data/ and Scripts/). Set EC4308_ROOT or run from inside the project.")
+
+  dir <- script_dir()
+  for (i in seq_len(6L)) {
+    if (dir.exists(file.path(dir, "Data")) && dir.exists(file.path(dir, "Scripts")))
+      return(normalizePath(dir, mustWork = TRUE))
+    parent <- dirname(dir)
+    if (identical(parent, dir)) break
+    dir <- parent
+  }
+  stop("Cannot locate the project root from ", script_dir(),
+       "; set EC4308_ROOT or options(ec4308.project_root=...).", call. = FALSE)
 }
 PROJECT_ROOT <- find_root()
-DATA_DIR <- Sys.getenv("EC4308_DATA", file.path(PROJECT_ROOT, "Data"))
-find_file <- function(name) {
-  first <- file.path(DATA_DIR, "processed", name)
-  if (file.exists(first)) return(first)
-  hits <- list.files(DATA_DIR, pattern = paste0("^", gsub("\\.", "\\\\.", name), "$"), recursive = TRUE, full.names = TRUE)
-  if (length(hits)) return(hits[1])
-  stop(sprintf("Cannot find '%s' under %s. Put it in the processed/ subfolder or another subfolder of the data directory.", name, DATA_DIR))
-}
+DATA_DIR <- file.path(PROJECT_ROOT, "Data")
+input_files <- c(
+  file.path(DATA_DIR, "processed", sprintf("model_ready_h%d.rds", c(1L,3L,6L))),
+  file.path(DATA_DIR, "crsp_monthly_index_data", "crsp_monthly_index_data.csv"),
+  file.path(DATA_DIR, "crsp_treasury_risk_free_series_data", "crsp_treasury_risk_free_series_data.csv")
+)
+missing_files <- input_files[!file.exists(input_files)]
+if (length(missing_files)) stop("Missing Elastic Net input files:\n", paste(missing_files, collapse="\n"))
+message("Project: ", PROJECT_ROOT)
 
-QUICK <- nzchar(Sys.getenv("QUICK"))
+QUICK <- tolower(Sys.getenv("QUICK")) %in% c("1", "true", "yes")
 CFG <- list(
   model        = "boosting_xgb",
-  out_dir      = Sys.getenv("EC4308_OUT", file.path(PROJECT_ROOT, "Results", "boosting")),
+  out_dir      = file.path(PROJECT_ROOT, "Results", "boosting"),
   horizons     = if (nzchar(Sys.getenv("H"))) as.integer(strsplit(Sys.getenv("H"), ",")[[1]]) else c(1L, 3L, 6L),
   val_start    = "2005-01", val_end  = "2012-12",
   test_start   = "2013-01", test_end = "2025-12",
@@ -70,11 +105,13 @@ CFG <- list(
   # ---- portfolio / evaluation (r.28, 32, 42) ---------------------------------
   cost_select  = 0.001,                           # 10 bp, used for cutoff selection
   cost_report  = c(0, 0.001, 0.002),              # 0 / 10 / 20 bp sensitivity, same signals
-  cutoff_step  = as.numeric(Sys.getenv("CUTOFF_STEP", "0.01")),
+  cutoff_step  = 0.05,
   cutoff_grid  = NULL,                                            # set just below
   tol          = 1e-12
 )
 CFG$cutoff_grid <- seq(0, 1, by = CFG$cutoff_step)
+stopifnot(length(CFG$cutoff_grid) == 21L,
+          isTRUE(all.equal(diff(CFG$cutoff_grid), rep(0.05, 20))))
 NON_FEATURES <- c("ym", "outcome_end", "equity_forward", "bill_accrual_proxy",
                   "target", "split", "mature_target_lag")      # r.3, r.13
 dir.create(CFG$out_dir, showWarnings = FALSE, recursive = TRUE)
@@ -87,47 +124,52 @@ log_msg <- function(...) cat(format(Sys.time(), "%H:%M:%S"), "|", ..., "\n", sep
 # 1. Data
 # -----------------------------------------------------------------------------
 load_h <- function(h) {
-  md <- read.csv(find_file(sprintf("model_data_h%d.csv", h)), stringsAsFactors = FALSE)
-  feat <- setdiff(names(md), NON_FEATURES)
-  stopifnot(length(feat) == 132L)
-  ft <- read.csv(find_file(sprintf("features_h%d_132.csv", h)), stringsAsFactors = FALSE)
-  stopifnot(identical(names(ft)[-1], feat), isTRUE(all.equal(as.matrix(ft[, feat]), as.matrix(md[, feat]), check.attributes = FALSE)))
-  list(h = h, md = md, feat = feat, X = as.matrix(md[, feat]),
-       y = as.numeric(md$target),
-       o = ym_idx(md$ym),
-       oe = ifelse(is.na(md$outcome_end), NA_integer_, ym_idx(md$outcome_end)))
+  obj <- readRDS(file.path(DATA_DIR, "processed", sprintf("model_ready_h%d.rds", h)))
+  X <- as.matrix(obj$X)
+  if (is.null(colnames(X))) colnames(X) <- obj$feature_names
+  md <- as.data.frame(obj$metadata)
+  stopifnot(ncol(X)==132L, is.numeric(X), all(is.finite(X)),
+            !is.null(colnames(X)), !anyDuplicated(colnames(X)),
+            nrow(X)==length(obj$y), nrow(md)==nrow(X),
+            identical(as.character(md$ym), as.character(obj$ym)))
+  md$ym <- as.character(obj$ym)
+  md$outcome_end <- as.character(md$outcome_end)
+  md$target <- as.numeric(obj$y)
+  o <- ym_idx(md$ym); oe <- ym_idx(md$outcome_end)
+  known <- !is.na(md$target)
+  stopifnot(all(diff(o)==1L), all(md$target[known] %in% c(0,1)),
+            all(oe[known]==o[known]+h),
+            all(oe[obj$rows$train]<=ym_idx("2004-12")),
+            all(oe[obj$rows$validation]<=ym_idx(CFG$val_end)))
+  # Use exactly the 132 supplied X columns; do not append mature_target_lag.
+  list(h=h, md=md, feat=colnames(X), X=X, y=md$target, o=o, oe=oe)
 }
 
-# Engine inputs: monthly equity return, actual quote-day counts, entry bill yields.
-# bill_yld_matched = expm1(365 * TMYLD_daily)  =>  days(t,t+1) is recovered exactly
-# from the h=1 file as log1p(bill_accrual_proxy) * 365 / log1p(bill_yld_matched)
-# (verified to be integer to ~1e-10 for every month).
+# Same raw inputs and accrual convention as Elastic Net:
+# req[t] = vwretd in month t+1; days[t] = actual adjacent CRSP quote-date gap.
+# TMYLD is the daily continuously compounded yield used directly in expm1(y*days).
 build_engine <- function() {
-  h1  <- read.csv(find_file("model_data_h1.csv"), stringsAsFactors = FALSE)
-  bl1 <- read.csv(find_file("base_raw_h1.csv"), stringsAsFactors = FALSE)
-  m1  <- merge(h1[, c("ym", "equity_forward", "bill_accrual_proxy")], bl1[, c("ym", "bill_yld_matched")], by = "ym", sort = TRUE)
-  o   <- ym_idx(m1$ym)
-  days <- round(log1p(m1$bill_accrual_proxy) * 365 / log1p(m1$bill_yld_matched))
-  # Months where the 4-week yield is exactly 0 (2010-01, 2011-12, 2021-04, 2021-05) make the ratio 0/0.
-  # Recover them from the 13-week file using days(t,t+3) = d(t) + d(t+1) + d(t+2).
-  h3  <- read.csv(find_file("model_data_h3.csv"), stringsAsFactors = FALSE)
-  bl3 <- read.csv(find_file("base_raw_h3.csv"), stringsAsFactors = FALSE)
-  m3  <- merge(data.frame(ym = m1$ym), merge(h3[, c("ym", "bill_accrual_proxy")], bl3[, c("ym", "bill_yld_matched")], by = "ym"), by = "ym", sort = TRUE)
-  D3  <- round(log1p(m3$bill_accrual_proxy) * 365 / log1p(m3$bill_yld_matched)); n <- length(days)
-  repeat {
-    na <- which(is.na(days)); changed <- FALSE
-    for (i in na) {
-      if (i + 2 <= n && !is.na(D3[i]) && !anyNA(days[c(i + 1, i + 2)])) { days[i] <- D3[i] - days[i + 1] - days[i + 2]; changed <- TRUE }
-      else if (i - 2 >= 1 && !is.na(D3[i - 2]) && !anyNA(days[c(i - 2, i - 1)])) { days[i] <- D3[i - 2] - days[i - 2] - days[i - 1]; changed <- TRUE }
-    }
-    if (!changed) break
-  }
-  stopifnot(sum(is.na(days)) <= 1L, all(days[!is.na(days)] >= 27 & days[!is.na(days)] <= 34))   # only the final origin may stay NA
-  EN <- list(o0 = o[1], req = m1$equity_forward, days = days, d = list())
-  for (h in c(1L, 3L, 6L)) {
-    bl <- read.csv(find_file(sprintf("base_raw_h%d.csv", h)), stringsAsFactors = FALSE)
-    mm <- merge(data.frame(ym = m1$ym), bl[, c("ym", "bill_yld_matched")], by = "ym", all.x = TRUE, sort = TRUE)
-    EN$d[[as.character(h)]] <- log1p(mm$bill_yld_matched) / 365        # daily cc yield at entry origin
+  market <- read.csv(input_files[4L], stringsAsFactors=FALSE)
+  bills <- read.csv(input_files[5L], stringsAsFactors=FALSE)
+  stopifnot(all(c("mthcaldt","vwretd") %in% names(market)),
+            all(c("MCALDT","KYTREASNOX","TMYLD") %in% names(bills)))
+  market$date <- as.Date(market$mthcaldt)
+  market$m <- ym_idx(market$date)
+  market <- market[order(market$m), ]
+  stopifnot(!anyNA(market$date), !anyDuplicated(market$m), all(diff(market$m)==1L))
+  bills$m <- ym_idx(bills$MCALDT)
+  bills <- bills[!is.na(bills$m), ]
+  EN <- list(o0=market$m[1L],
+             req=c(tail(market$vwretd,-1L),NA_real_),
+             days=c(as.numeric(diff(market$date)),NA_real_),
+             quote_start=as.character(market$date),
+             quote_end=c(as.character(tail(market$date,-1L)),NA_character_),
+             d=list())
+  security <- c(`1`=2000061L, `3`=2000062L, `6`=2000063L)
+  for (h in c(1L,3L,6L)) {
+    b <- bills[!is.na(bills$KYTREASNOX) & bills$KYTREASNOX==security[[as.character(h)]], ]
+    stopifnot(nrow(b)>0L, !anyDuplicated(b$m))
+    EN$d[[as.character(h)]] <- b$TMYLD[match(market$m,b$m)]
   }
   EN
 }
@@ -135,7 +177,7 @@ build_engine <- function() {
 # -----------------------------------------------------------------------------
 # 2. Model: one expanding-window xgboost fit -> probabilities for several nrounds
 # -----------------------------------------------------------------------------
-fit_rows_at <- function(D, t) which(!is.na(D$y) & !is.na(D$oe) & D$oe <= t)   # r.17: outcome_end <= origin
+fit_rows_at <- function(D, t) which(!is.na(D$y) & !is.na(D$oe) & D$oe <= t & D$o < t)   # r.17: outcome_end <= origin
 
 fit_predict <- function(D, fit_idx, pred_row, depth, eta, seed, nr_grid) {
   stopifnot(length(fit_idx) > 50)
@@ -204,12 +246,17 @@ run_portfolio <- function(sig, o_vec, h, cost, EN, w_fixed = NULL) {
     matched <- mean(b)
     common  <- expm1(d1[ti] * days)                                       # r.43 common 4-week reference
     req <- EN$req[ti]
+    stopifnot(length(req)==1L, is.finite(req), req > -1,
+              length(days)==1L, is.finite(days), days > 0,
+              all(is.finite(b)), is.finite(common))
     bill_end <- if (is.null(w_fixed)) (Vp / h) * sum((1 + b)[sig[pos] == 0]) else (Vp - Sp) * (1 + matched)
     end <- Sp * (1 + req) + bill_end
     out[a, ] <- list(t, w, end / V - 1, end / Vp - 1, common, matched, req, q, cst, V, end, days)
     V <- end; S <- Sp * (1 + req)
   }
-  out$month <- idx_ym(out$origin + 1L); out$quote_start <- idx_ym(out$origin); out$quote_end <- out$month
+  out$month <- idx_ym(out$origin + 1L)
+  qi <- out$origin - EN$o0 + 1L
+  out$quote_start <- EN$quote_start[qi]; out$quote_end <- EN$quote_end[qi]
   out
 }
 
@@ -390,10 +437,10 @@ main <- function() {
   w(S$cand_prob, "boosting_validation_candidate_probabilities_wide.csv"); w(S$monthly, "boosting_monthly_returns.csv")
   w(S$perf, "boosting_performance.csv"); w(S$fcm, "boosting_forecast_metrics.csv"); w(S$calib, "boosting_calibration.csv")
   w(S$audit, "boosting_refit_audit.csv")
-  files <- c(sprintf("model_data_h%d.csv", c(1, 3, 6)), sprintf("features_h%d_132.csv", c(1, 3, 6)), sprintf("base_raw_h%d.csv", c(1, 3, 6)))
-  hash <- tools::md5sum(vapply(files, find_file, character(1)))
+  hash <- tools::md5sum(input_files)
   D1 <- load_h(CFG$horizons[1])
   info <- c("spec: GROUP_MODEL_STANDARDS_DRAFT.md (supervisor revision 2026-11-05)",
+            "inputs: Elastic Net model_ready RDS + raw CRSP monthly index and Treasury series",
             paste("R:", R.version.string), paste("xgboost:", as.character(packageVersion("xgboost"))),
             paste("seed base:", CFG$seed, "(per-fit seed = base + h*100003 + origin index)"),
             paste("grid depth:", toString(CFG$depth_grid), "| eta:", toString(CFG$eta_grid), "| nrounds:", toString(CFG$nrounds_grid)),

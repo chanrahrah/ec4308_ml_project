@@ -1,22 +1,19 @@
 spec: GROUP_MODEL_STANDARDS_DRAFT.md (supervisor revision 2026-11-05)
+inputs: Elastic Net model_ready RDS + raw CRSP monthly index and Treasury series
 R: R version 4.4.2 (2024-10-31 ucrt)
 xgboost: 3.2.1.1
 seed base: 4308 (per-fit seed = base + h*100003 + origin index)
 grid depth: 1, 2, 3 | eta: 0.02, 0.05, 0.1 | nrounds: 50, 100, 200, 400
 fixed: subsample 0.7 colsample_bytree 0.5 min_child_weight 5 lambda 1 nthread 1
 tie rule (Brier within 1e-12): lowest max_depth, then fewest rounds, then lowest eta
-cutoff grid: seq(0,1,by= 0.01 ) | tie rule: nearest 0.50, then lower; undefined Sharpe excluded; stop if none defined
+cutoff grid: seq(0,1,by= 0.05 ) | tie rule: nearest 0.50, then lower; undefined Sharpe excluded; stop if none defined
 
 source hashes (md5):
-C:/Users/User/Documents/ec4308_ml_project/Data/processed/model_data_h1.csv 8ed95d9ddbac3002f063f2d52738d34c
-C:/Users/User/Documents/ec4308_ml_project/Data/processed/model_data_h3.csv 274cd66017f6ac047fa0dbd6c707b578
-C:/Users/User/Documents/ec4308_ml_project/Data/processed/model_data_h6.csv 7d134e7d2d4a61da5b9b0b1c298777ba
-C:/Users/User/Documents/ec4308_ml_project/Data/processed/features_h1_132.csv 06ac355367cd30626c5228c4b0b5e95a
-C:/Users/User/Documents/ec4308_ml_project/Data/processed/features_h3_132.csv dd596e6c35df26e85ffb3a48ff7669ff
-C:/Users/User/Documents/ec4308_ml_project/Data/processed/features_h6_132.csv a820ca35ef917560734a3bc4412dddb9
-C:/Users/User/Documents/ec4308_ml_project/Data/processed/base_raw_h1.csv d014dcbf46ac5cf99194d58273cc98d3
-C:/Users/User/Documents/ec4308_ml_project/Data/processed/base_raw_h3.csv f4b7ef507903b04d41dfc5e0ec2bc3b3
-C:/Users/User/Documents/ec4308_ml_project/Data/processed/base_raw_h6.csv 559bd78193c37d2aa3f1357f901c7a10
+C:\Users\User\Documents\ec4308_ml_project/Data/processed/model_ready_h1.rds 42c9958ba049abf69fa8226b25ef4ae5
+C:\Users\User\Documents\ec4308_ml_project/Data/processed/model_ready_h3.rds 731d755d35d85bfb6e8c851b0a586d8c
+C:\Users\User\Documents\ec4308_ml_project/Data/processed/model_ready_h6.rds 20e39c054ad6c472f299ecb599501d28
+C:\Users\User\Documents\ec4308_ml_project/Data/crsp_monthly_index_data/crsp_monthly_index_data.csv f9e8bffbe4c526aac81104d4ddac26eb
+C:\Users\User\Documents\ec4308_ml_project/Data/crsp_treasury_risk_free_series_data/crsp_treasury_risk_free_series_data.csv 20468e251b39fc248f20f233051e2d1b
 
 feature names (132):
 mkt_excess_lag0
