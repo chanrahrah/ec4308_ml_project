@@ -1,0 +1,4 @@
+"h","model","alpha","lambda","validation_Brier","lambda_at_upper_bound","n_validation","mean_nonzero","cutoff","validation_sharpe_matched_ladder","validation_sharpe_common_rf","fixed_050_validation_sharpe_matched_ladder","selection_cost"
+1,"elastic_net_logit_teacher_fixed03_cutoff005",0,0.3,0.240647632281414,TRUE,95,0,0.5,0.29062557446729,0.29062557446729,0.29062557446729,0.001
+3,"elastic_net_logit_teacher_fixed03_cutoff005",0,0.3,0.234798442250509,TRUE,93,0,0.5,0.287042101394736,0.292692639711222,0.287042101394736,0.001
+6,"elastic_net_logit_teacher_fixed03_cutoff005",0,0.3,0.221580464523245,TRUE,90,0,0.5,0.269180289187012,0.285108306586892,0.269180289187012,0.001

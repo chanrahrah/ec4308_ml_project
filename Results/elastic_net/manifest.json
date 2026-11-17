@@ -1,0 +1,55 @@
+{
+  "version": "elastic_net_logit_teacher_fixed03_cutoff005_v1_2026_11_17",
+  "selected": [
+    {
+      "h": 1,
+      "model": "elastic_net_logit_teacher_fixed03_cutoff005",
+      "alpha": 0,
+      "lambda": 0.29999999999999999,
+      "validation_Brier": 0.24064763228141431,
+      "lambda_at_upper_bound": true,
+      "n_validation": 95,
+      "mean_nonzero": 0,
+      "cutoff": 0.5,
+      "validation_sharpe_matched_ladder": 0.29062557446728959,
+      "validation_sharpe_common_rf": 0.29062557446728959,
+      "fixed_050_validation_sharpe_matched_ladder": 0.29062557446728959,
+      "selection_cost": 0.001
+    },
+    {
+      "h": 3,
+      "model": "elastic_net_logit_teacher_fixed03_cutoff005",
+      "alpha": 0,
+      "lambda": 0.29999999999999999,
+      "validation_Brier": 0.23479844225050858,
+      "lambda_at_upper_bound": true,
+      "n_validation": 93,
+      "mean_nonzero": 0,
+      "cutoff": 0.5,
+      "validation_sharpe_matched_ladder": 0.28704210139473563,
+      "validation_sharpe_common_rf": 0.29269263971122172,
+      "fixed_050_validation_sharpe_matched_ladder": 0.28704210139473563,
+      "selection_cost": 0.001
+    },
+    {
+      "h": 6,
+      "model": "elastic_net_logit_teacher_fixed03_cutoff005",
+      "alpha": 0,
+      "lambda": 0.29999999999999999,
+      "validation_Brier": 0.22158046452324473,
+      "lambda_at_upper_bound": true,
+      "n_validation": 90,
+      "mean_nonzero": 0,
+      "cutoff": 0.5,
+      "validation_sharpe_matched_ladder": 0.26918028918701198,
+      "validation_sharpe_common_rf": 0.28510830658689157,
+      "fixed_050_validation_sharpe_matched_ladder": 0.26918028918701198,
+      "selection_cost": 0.001
+    }
+  ],
+  "input_hashes": ["0aa88025b4cb3f5a69f858750569217e6f80d86947a24a4e30e520cbe22ff9cc", "d39b1a1804ad742273380bc8ea0d8fa990089426852d9fbdd85b51dd1c92e6cc", "2cd986491c71e9e37ce9661f4c040ac70530c984b90728859aa3919d9dcdde4b", "8bae185a75ea7712da6222d47df60540ecc8bd09f18ecec095c43b5f9b984471", "25a5ff5ca50ff24345709eb5bea334ae5b982201c7eacf8ea03f6b152cfc94ee"],
+  "code_hashes": ["e55e79da066ea0f72ffb00ff6214b662d9310dea9429af5cf142fe6548cb25d4", "5188545c0d0cdc8c17de9cfc9d8a5cb10965b9690d8a2f3949f250035560cf95", "821631d5433bfab36968a133d1500900858d9f1bac7571f6e88fb6ba052f4815", "8542b24aa22b78ad9665393aa75f3f8ab77453271453ced6dc874432370e463a", "0697dc91b61307c18562438b98b6dc33c4801d1d4d1fdbcfdc0c94c71ff5ea8f", "ba876190e36f601588ff8111a16c9d5aeb08dc91014cfa1757b47b4fd056bfde"],
+  "tests_passed": 17,
+  "test_used_for_selection": false,
+  "note": "Fixed-lambda model specified after inspection of previous elastic-net test results; exploratory sensitivity, NOT virgin holdout"
+}
