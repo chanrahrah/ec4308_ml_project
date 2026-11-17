@@ -1,5 +1,5 @@
 # Ignore the entire Data folder and all its contents
-Data/
+/Data/
 
 # Ignore Python environment and cache files
 __pycache__/

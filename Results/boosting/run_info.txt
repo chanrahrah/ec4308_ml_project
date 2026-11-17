@@ -1,0 +1,52 @@
+Completed: 2026-11-17 22:34:34
+R version 4.6.1 (2026-06-24 ucrt)
+Package xgboost 3.2.1.1
+
+Settings:
+  horizons: 1, 3, 6
+  train_end: 2004-12
+  validation_start: 2005-01
+  validation_end: 2012-12
+  test_start: 2013-01
+  test_end: 2025-12
+  cutoffs: 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00
+  comparison_cutoff: 0.5
+  cutoff_objective: sharpe_matched_ladder
+  primary_cost: 0.001
+  costs: 0.000, 0.001, 0.002
+  risk_aversion: 3
+  common_rf_security: 2000061
+  initial_allocation_cost: FALSE
+  fixed_benchmark_weight: 0.5
+  seed: 4308
+  model: boosting
+  depths: 1, 2, 3
+  etas: 0.02, 0.05, 0.10
+  nrounds:  50, 100, 200, 400
+  subsample: 0.7
+  colsample: 0.5
+  min_child_weight: 5
+  l2_penalty: 1
+
+Input files (md5):
+  Data/processed/model_ready_h1.rds  58c1754362b7f530b0abc318d8a387da
+  Data/processed/model_ready_h3.rds  de6ce2798a7059cf607bb339e73a06f3
+  Data/processed/model_ready_h6.rds  7c734552bbb1e9372d5862f7e1efc237
+  Data/crsp_monthly_index_data/crsp_monthly_index_data.csv  f9e8bffbe4c526aac81104d4ddac26eb
+  Data/crsp_treasury_risk_free_series_data/crsp_treasury_risk_free_series_data.csv  20468e251b39fc248f20f233051e2d1b
+
+Checks passed (14):
+  Six overlapping cohorts reproduce a hand-computed 12-month path
+  Trades hit the target weight exactly after costs
+  A constant target still rebalances after market drift
+  Cutoff ties go to 0.50 and undefined Sharpes are skipped
+  Brier ties go to the first candidate in the tie order
+  Both Sharpe ratios use their own reference and the sample SD
+  AUC handles ties and the cutoff is inclusive
+  The common reference is identical across horizons
+  Bill accrual and passive strategies h 1
+  Bill accrual and passive strategies h 3
+  Bill accrual and passive strategies h 6
+  Future data cannot change a forecast; seeds are reproducible h 1
+  Future data cannot change a forecast; seeds are reproducible h 3
+  Future data cannot change a forecast; seeds are reproducible h 6

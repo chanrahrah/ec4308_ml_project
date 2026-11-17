@@ -1,0 +1,43 @@
+Completed: 2026-11-17 22:35:14
+R version 4.6.1 (2026-06-24 ucrt)
+
+Settings:
+  horizons: 1, 3, 6
+  train_end: 2004-12
+  validation_start: 2005-01
+  validation_end: 2012-12
+  test_start: 2013-01
+  test_end: 2025-12
+  cutoffs: 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00
+  comparison_cutoff: 0.5
+  cutoff_objective: sharpe_matched_ladder
+  primary_cost: 0.001
+  costs: 0.000, 0.001, 0.002
+  risk_aversion: 3
+  common_rf_security: 2000061
+  initial_allocation_cost: FALSE
+  fixed_benchmark_weight: 0.5
+  seed: 4308
+  model: ensemble
+  members: rf         , elastic_net, boosting   
+  probability_cutoff: 0.5
+  gr_intercept: TRUE
+  gr_min_rows: 24
+
+Input files (md5):
+  Results/rf/forecasts.csv  aa34052b3d5f978d311d1bb1dd44d781
+  Results/elastic_net/forecasts.csv  c13910540c9317f42830588a90c9e346
+  Results/boosting/forecasts.csv  691b23e3f95b6b2e07039d4ff2b38a9b
+  Data/crsp_monthly_index_data/crsp_monthly_index_data.csv  f9e8bffbe4c526aac81104d4ddac26eb
+  Data/crsp_treasury_risk_free_series_data/crsp_treasury_risk_free_series_data.csv  20468e251b39fc248f20f233051e2d1b
+
+Checks passed (9):
+  Majority vote: stocks only with a strict majority
+  Members vote with their own cutoffs, merged by key not row order
+  Inconsistent member forecasts are refused
+  Vote share >= (floor(M/2)+1)/M reproduces the vote
+  GR matches a brute-force search over the weight simplex
+  GR weights are nonnegative, sum to one and recover the truth
+  GR handles constant and duplicate members; failures fall back to equal weights
+  GR predictions are clipped and matched to members by name
+  Yearly GR only uses outcomes known by the preceding December
