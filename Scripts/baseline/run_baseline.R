@@ -3,7 +3,7 @@
 script <- c(gsub("~+~", " ", sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)), fixed = TRUE),
             tryCatch(sys.frame(1)$ofile, error = function(e) NULL))
 source(file.path(if (length(script)) dirname(script[1]) else "Scripts/baseline", "..", "utils", "utils.R"))
-for (file in c("model.R", "tests.R")) source(file.path(SCRIPTS, "baseline", file))
+for (file in c("model.R", "tests.R", "figures.R")) source(file.path(SCRIPTS, "baseline", file))
 
 cfg <- baseline_config()
 returns <- load_return_data()
@@ -34,5 +34,7 @@ results$forecast_metrics <- merge(results$forecast_metrics, intervals, by = c("p
 out <- results_dir("baseline")
 write_tables(out, c(list(forecasts = forecasts, cutoff_grid = bind_rows(grids),
                          coefficients = bind_rows(coefficients)), results))
+invisible(draw_wealth_figure(out, results$monthly_portfolios, cfg))
+invisible(draw_probability_figure(out, forecasts, cfg))
 write_run_info(out, cfg, checks)
 message("Results saved in ", out)
