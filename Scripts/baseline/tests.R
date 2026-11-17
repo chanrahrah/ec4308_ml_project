@@ -1,10 +1,10 @@
-# Focused numerical and information-set checks; called before any model run.
+# Check forecast timing, bill accrual, trading costs and performance calculations.
 run_baseline_tests <- function(root, cfg) {
   passed <- character()
   check <- function(name, expr) { force(expr); passed <<- c(passed, name) }
   near <- function(a, b, tol = 1e-10) ensure(isTRUE(all.equal(as.numeric(a), as.numeric(b), tolerance = tol)), "Numerical test failed")
 
-  check("Professor's 12-month six-cohort example", {
+  check("Twelve-month portfolio with six overlapping cohorts", {
     signals <- c(1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,0,1)
     market <- c(.03,-.02,.04,-.06,.02,.05,-.08,.03,-.01,.06,-.04,.02)
     w <- vapply(1:12, function(i) mean(signals[i:(i+5)]), numeric(1))
@@ -63,6 +63,7 @@ run_baseline_tests <- function(root, cfg) {
       feb <- which(d$ym=="2005-02")
       independent <- fit_binary(d,mature_rows(d,month_number("2005-02")),"probit")
       near(f$probability[2],predict_binary(independent,d$X[feb,,drop=FALSE]))
+      near(f$historical_probability[2],mean(d$y[mature_rows(d,month_number("2005-02"))]))
       ensure(!isTRUE(all.equal(result$records[[1]]$coefficients$coefficient_standardized,
                                result$records[[2]]$coefficients$coefficient_standardized)),
              "Validation parameters remained fixed")
@@ -138,6 +139,21 @@ run_baseline_tests <- function(root, cfg) {
     f <- data.frame(classification_eligible=TRUE,target=c(0,1,0,1),probability=rep(.5,4))
     m <- forecast_metrics(f,.5)
     near(m$AUC,.5); near(m$Brier,.25); near(m$recall,1)
+    near(binary_auc(c(0,0,1,1),c(.1,.2,.8,.9)),1)
+    near(binary_auc(c(0,0,1,1),c(.9,.8,.2,.1)),0)
+    near(binary_auc(c(0,1,0,1),rep(.5,4)),.5)
+  })
+  check("Historical-rate skill and dependence-aware interval diagnostics", {
+    short <- cfg; short$bootstrap_replicates <- 99L
+    short$bootstrap_block_sensitivity <- integer()
+    f <- data.frame(origin=month_string(month_number("2000-01")+0:47),
+      target=rep(c(0,1),24),probability=.5,historical_probability=.5,
+      classification_eligible=TRUE,h=1,period="test")
+    z <- baseline_probability_diagnostics(f,short)
+    near(z$historical_Brier,.25); near(z$Brier_skill,0)
+    near(z$AUC_CI_lower,.5); near(z$AUC_CI_upper,.5)
+    set.seed(4308); ids <- stationary_indices(48,12)
+    ensure(length(ids)==48 && all(ids %in% 1:48), "Invalid bootstrap row indices")
   })
   data.frame(test=passed,passed=TRUE)
 }

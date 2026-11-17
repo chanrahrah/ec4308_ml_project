@@ -1,5 +1,4 @@
-# A cohort's decision persists for h monthly return periods; h cohorts receive
-# equal post-cost capital at each month-end, following the professor's example.
+# Read monthly market returns and Treasury-bill yields for portfolio evaluation.
 load_return_data <- function(root) {
   market <- utils::read.csv(file.path(root, "Data/crsp_monthly_index_data/crsp_monthly_index_data.csv"))
   market$date <- as.Date(market$mthcaldt)
@@ -12,6 +11,7 @@ load_return_data <- function(root) {
   list(market = market, bills = bills)
 }
 
+# Align each return month with its h active signals and their original bill yields.
 portfolio_inputs <- function(forecasts, returns, h, end, common_rf_security = 2000061L) {
   origin <- month_number(forecasts$origin)
   ensure(all(diff(origin) == 1L), "Forecasts must have a complete monthly calendar")
@@ -31,8 +31,7 @@ portfolio_inputs <- function(forecasts, returns, h, end, common_rf_security = 20
   ensure(!anyDuplicated(common$m), "Duplicate common bill quote")
   common_yield <- common$TMYLD[match(origin[j], common$m)]
   ensure(all(is.finite(common_yield)), "Missing common bill yield")
-  # Both references cover the SAME one-month interval. Bill maturity never
-  # multiplies days: h controls the active vintages, not the accrual interval.
+  # Accrue each bill yield over this monthly quote interval, regardless of maturity.
   common_return <- expm1(common_yield * days)
   active <- t(matrix(unlist(lapply(j, function(i) seq.int(i - h + 1L, i))), nrow = h))
   bill_matrix <- expm1(sweep(matrix(yield[active], nrow = length(j), ncol = h), 1L, days, "*"))
@@ -58,6 +57,7 @@ rebalance_trade <- function(wealth, stock_value, target_weight, cost_rate) {
   list(trade = trade, cost = cost, capital = wealth - cost)
 }
 
+# Rebalance to post-cost target weights and compound monthly net returns.
 simulate_weights <- function(weights, market, bill_contribution, cost_rate, initial_cost = FALSE) {
   n <- length(weights)
   ensure(n == length(market) && n == length(bill_contribution) && n > 1L &&
@@ -85,12 +85,18 @@ simulate_weights <- function(weights, market, bill_contribution, cost_rate, init
   do.call(rbind, out)
 }
 
+# Give each active cohort equal capital; retain its signal for h months.
 portfolio_path <- function(inputs, signals, cost_rate, cfg) {
   ensure(length(signals) >= max(inputs$active) && all(signals %in% 0:1), "Invalid trading signals")
   active_signals <- matrix(signals[inputs$active], nrow = nrow(inputs$active), ncol = inputs$h)
   weights <- rowMeans(active_signals)
   bill <- rowMeans((1 - active_signals) * inputs$bill_matrix)
   p <- simulate_weights(weights, inputs$market, bill, cost_rate, cfg$initial_allocation_cost)
+  portfolio_frame(inputs, p)
+}
+
+# Attach the evaluation dates and bill references to a simulated portfolio.
+portfolio_frame <- function(inputs, p) {
   cbind(data.frame(month = inputs$ym, last_signal_origin = inputs$origin,
     quote_start = inputs$quote_start, quote_end = inputs$quote_end,
     quote_days = inputs$days, market_return = inputs$market,
@@ -99,12 +105,14 @@ portfolio_path <- function(inputs, signals, cost_rate, cfg) {
     bill_reference_return = inputs$bill_reference), p)
 }
 
+# Annualize the mean-to-sample-standard-deviation ratio of monthly excess returns.
 annual_sharpe <- function(excess) {
   ensure(length(excess) > 1L && all(is.finite(excess)), "Invalid excess-return sample")
   sigma <- stats::sd(excess)
   if (sigma > 1e-12) sqrt(12) * mean(excess) / sigma else NA_real_
 }
 
+# Summarize returns, risk, equity exposure and trading costs on the supplied dates.
 portfolio_metrics <- function(p, gamma = 3) {
   ensure(all(is.finite(as.matrix(p[, c("net_return", "common_rf_return", "matched_ladder_return")]))),
          "Missing/nonfinite returns or references")
@@ -121,7 +129,7 @@ portfolio_metrics <- function(p, gamma = 3) {
     total_return = tail(wealth, 1) - 1, CAGR = cagr,
     annual_volatility = stats::sd(r) * sqrt(12),
     sharpe_common_rf = common_sharpe, sharpe_matched_ladder = sharpe,
-    # Backward-compatible alias; all new selection/reporting uses explicit names.
+    # Retain this field name for consumers of the shared evaluator.
     net_Sharpe = sharpe, excess_metric_reference = "matched_ladder",
     Sortino = if (downside > 1e-12) sqrt(12) * mean(excess) / downside else NA_real_,
     max_drawdown = maxdd, Calmar = if (maxdd > 1e-12) cagr / maxdd else NA_real_,
@@ -134,6 +142,7 @@ portfolio_metrics <- function(p, gamma = 3) {
     allocation_change_months = sum(abs(diff(p$stock_weight)) > 1e-12))
 }
 
+# Maximize validation Sharpe; resolve ties by proximity to 0.50, then lower cutoff.
 choose_cutoff <- function(grid, objective = "sharpe_matched_ladder") {
   ensure(objective %in% names(grid), "Cutoff objective missing from grid")
   scores <- grid[[objective]]
@@ -144,6 +153,7 @@ choose_cutoff <- function(grid, objective = "sharpe_matched_ladder") {
   tied[order(abs(grid$cutoff[tied] - 0.5), grid$cutoff[tied])][1L]
 }
 
+# Score only completed outcomes belonging to the evaluation split.
 forecast_metrics <- function(f, cutoff) {
   f <- f[f$classification_eligible & !is.na(f$target), ]
   y <- f$target; p <- f$probability; pred <- as.integer(p >= cutoff)
